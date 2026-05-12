@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Админка — рулетка</title>
+    <style>
+      :root {
+        --bg: #0f0a1a;
+        --card: #1a1230;
+        --border: rgba(107, 33, 168, 0.45);
+        --text: #f3e8ff;
+        --muted: #a78bfa;
+        --accent: #e91e8c;
+        --ok: #22c55e;
+        --err: #f87171;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+        padding: 24px;
+      }
+      h1 {
+        font-weight: 800;
+        margin: 0 0 8px;
+      }
+      .sub {
+        color: var(--muted);
+        margin-bottom: 24px;
+      }
+      section {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 20px;
+        max-width: 960px;
+      }
+      label {
+        display: block;
+        font-size: 12px;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+      input[type="text"],
+      input[type="password"],
+      input[type="number"],
+      textarea {
+        width: 100%;
+        max-width: 400px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: #120826;
+        color: var(--text);
+        margin-bottom: 12px;
+      }
+      textarea {
+        max-width: 100%;
+        min-height: 60px;
+      }
+      button {
+        background: linear-gradient(135deg, var(--accent), #c026d3);
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-weight: 700;
+        cursor: pointer;
+        margin-right: 8px;
+        margin-bottom: 8px;
+      }
+      button.secondary {
+        background: #2e1065;
+      }
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        align-items: flex-end;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+      th,
+      td {
+        border-bottom: 1px solid var(--border);
+        padding: 8px 10px;
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        color: var(--muted);
+        font-weight: 600;
+      }
+      .pill {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+      }
+      .pill.on {
+        background: rgba(34, 197, 94, 0.2);
+        color: var(--ok);
+      }
+      .pill.off {
+        background: rgba(248, 113, 113, 0.15);
+        color: var(--err);
+      }
+      .msg {
+        padding: 10px;
+        border-radius: 10px;
+        margin-top: 12px;
+        font-size: 14px;
+      }
+      .msg.ok {
+        background: rgba(34, 197, 94, 0.12);
+        color: var(--ok);
+      }
+      .msg.err {
+        background: rgba(248, 113, 113, 0.12);
+        color: var(--err);
+      }
+      .hidden {
+        display: none !important;
+      }
+      .prize-card {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--border);
+      }
+      .prize-card img {
+        width: 64px;
+        height: 96px;
+        object-fit: cover;
+        border-radius: 8px;
+      }
+      .small {
+        font-size: 12px;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Админка рулетки</h1>
+    <p class="sub">Загрузка призов, список кодов, активация у менеджера.</p>
+
+    <section id="loginSection">
+      <h2>Вход</h2>
+      <label>Пароль</label>
+      <input type="password" id="adminPassword" autocomplete="current-password" />
+      <button type="button" id="loginBtn">Войти</button>
+      <div id="loginMsg"></div>
+    </section>
+
+    <div id="appSection" class="hidden">
+      <section>
+        <h2>Новый приз</h2>
+        <div class="row">
+          <div>
+            <label>Заголовок</label>
+            <input type="text" id="prizeTitle" placeholder="Например: Welcome-напиток" />
+          </div>
+          <div>
+            <label>Подзаголовок</label>
+            <input type="text" id="prizeSub" placeholder="Краткое описание" />
+          </div>
+          <div>
+            <label>Порядок (sort)</label>
+            <input type="number" id="prizeOrder" value="0" />
+          </div>
+        </div>
+        <label>Вертикальное фото (jpeg/png/webp)</label>
+        <input type="file" id="prizeFile" accept="image/jpeg,image/png,image/webp,image/gif" />
+        <button type="button" id="uploadPrize">Загрузить</button>
+        <div id="uploadMsg"></div>
+      </section>
+
+      <section>
+        <h2>Призы</h2>
+        <button type="button" class="secondary" id="refreshPrizes">Обновить список</button>
+        <div id="prizesList"></div>
+      </section>
+
+      <section>
+        <h2>Активация кода гостя</h2>
+        <label>Код (NSK-…)</label>
+        <input type="text" id="redeemInput" placeholder="NSK-XXXX-XXXX" />
+        <button type="button" id="redeemBtn">Подтвердить в заведении</button>
+        <div id="redeemMsg"></div>
+      </section>
+
+      <section>
+        <h2>Последние коды</h2>
+        <button type="button" class="secondary" id="refreshCodes">Обновить</button>
+        <div style="overflow-x: auto">
+          <table id="codesTable">
+            <thead>
+              <tr>
+                <th>Код</th>
+                <th>Юзер</th>
+                <th>Приз</th>
+                <th>Создан</th>
+                <th>Статус</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <button type="button" class="secondary" id="logoutBtn">Выйти</button>
+    </div>
+
+    <script>
+      const api = (path, opts = {}) =>
+        fetch(path, {
+          credentials: "include",
+          ...opts,
+          headers: {
+            ...(opts.body instanceof FormData ? {} : { "Content-Type": "application/json" }),
+            ...opts.headers,
+          },
+        });
+
+      function show(el, text, ok) {
+        el.className = "msg " + (ok ? "ok" : "err");
+        el.textContent = text;
+      }
+
+      async function checkSession() {
+        const r = await api("/api/admin/prizes");
+        if (r.ok) {
+          document.getElementById("loginSection").classList.add("hidden");
+          document.getElementById("appSection").classList.remove("hidden");
+          await loadPrizes();
+          await loadCodes();
+          return true;
+        }
+        return false;
+      }
+
+      async function loadPrizes() {
+        const r = await api("/api/admin/prizes");
+        if (!r.ok) return;
+        const data = await r.json();
+        const host = document.getElementById("prizesList");
+        host.innerHTML = "";
+        for (const p of data.prizes) {
+          const div = document.createElement("div");
+          div.className = "prize-card";
+          div.innerHTML = `
+            <img src="${p.image_url}" alt="" />
+            <div style="flex:1">
+              <div><strong>#${p.id}</strong> ${escapeHtml(p.title)}</div>
+              <div class="small">${escapeHtml(p.subtitle || "")}</div>
+              <div class="small">sort: ${p.sort_order} · <span class="pill ${p.active ? "on" : "off"}">${p.active ? "активен" : "выкл"}</span></div>
+              <button type="button" data-id="${p.id}" class="togglePrize secondary" style="margin-top:8px;font-size:12px;padding:6px 12px">
+                ${p.active ? "Выключить" : "Включить"}
+              </button>
+              <button type="button" data-id="${p.id}" class="delPrize secondary" style="margin-top:8px;font-size:12px;padding:6px 12px">Удалить</button>
+            </div>`;
+          host.appendChild(div);
+        }
+        host.querySelectorAll(".togglePrize").forEach((btn) => {
+          btn.onclick = async () => {
+            const id = btn.getAttribute("data-id");
+            const row = data.prizes.find((x) => String(x.id) === id);
+            await api(`/api/admin/prizes/${id}`, {
+              method: "PATCH",
+              body: JSON.stringify({ active: !row.active }),
+            });
+            loadPrizes();
+          };
+        });
+        host.querySelectorAll(".delPrize").forEach((btn) => {
+          btn.onclick = async () => {
+            if (!confirm("Удалить приз?")) return;
+            const id = btn.getAttribute("data-id");
+            await api(`/api/admin/prizes/${id}`, { method: "DELETE" });
+            loadPrizes();
+          };
+        });
+      }
+
+      function escapeHtml(s) {
+        return String(s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      async function loadCodes() {
+        const r = await api("/api/admin/codes?limit=200");
+        if (!r.ok) return;
+        const data = await r.json();
+        const tbody = document.querySelector("#codesTable tbody");
+        tbody.innerHTML = "";
+        for (const c of data.codes) {
+          const tr = document.createElement("tr");
+          const redeemed = c.redeemed_at != null;
+          tr.innerHTML = `
+            <td><code>${escapeHtml(c.code)}</code></td>
+            <td>${escapeHtml(c.user_sub)}</td>
+            <td>${escapeHtml(c.prize_title)}</td>
+            <td class="small">${new Date(c.created_at).toLocaleString()}</td>
+            <td>${redeemed ? `<span class="pill off">погашен</span>` : `<span class="pill on">активен</span>`}</td>`;
+         tbody.appendChild(tr);
+        }
+      }
+
+      document.getElementById("loginBtn").onclick = async () => {
+        const pw = document.getElementById("adminPassword").value;
+        const msg = document.getElementById("loginMsg");
+        const r = await api("/api/admin/login", {
+          method: "POST",
+          body: JSON.stringify({ password: pw }),
+        });
+        if (r.ok) {
+          show(msg, "Вход выполнен", true);
+          await checkSession();
+        } else {
+          const j = await r.json().catch(() => ({}));
+          show(msg, j.error || "Ошибка входа", false);
+        }
+      };
+
+      document.getElementById("logoutBtn").onclick = async () => {
+        await api("/api/admin/logout", { method: "POST" });
+        location.reload();
+      };
+
+      document.getElementById("uploadPrize").onclick = async () => {
+        const msg = document.getElementById("uploadMsg");
+        const file = document.getElementById("prizeFile").files[0];
+        if (!file) {
+          show(msg, "Выберите файл", false);
+          return;
+        }
+        const fd = new FormData();
+        fd.append("image", file);
+        fd.append("title", document.getElementById("prizeTitle").value || "Приз");
+        fd.append("subtitle", document.getElementById("prizeSub").value || "");
+        fd.append("sort_order", document.getElementById("prizeOrder").value || "0");
+        const r = await api("/api/admin/prizes", { method: "POST", body: fd });
+        if (r.ok) {
+          show(msg, "Загружено", true);
+          document.getElementById("prizeFile").value = "";
+          loadPrizes();
+        } else {
+          const t = await r.text();
+          show(msg, t || "Ошибка загрузки", false);
+        }
+      };
+
+      document.getElementById("refreshPrizes").onclick = loadPrizes;
+      document.getElementById("refreshCodes").onclick = loadCodes;
+
+      document.getElementById("redeemBtn").onclick = async () => {
+        const msg = document.getElementById("redeemMsg");
+        const code = document.getElementById("redeemInput").value.trim();
+        const r = await api("/api/admin/codes/redeem", {
+          method: "POST",
+          body: JSON.stringify({ code }),
+        });
+        const j = await r.json().catch(() => ({}));
+        if (r.ok) {
+          show(
+            msg,
+            `Погашено: ${j.prize_title} · гость ${j.user_sub}`,
+            true,
+          );
+          loadCodes();
+        } else {
+          show(msg, j.error === "already_activated" ? "Код уже был активирован" : (j.error || r.status), false);
+        }
+      };
+
+      checkSession();
+    </script>
+  </body>
+</html>

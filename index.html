@@ -1,0 +1,1101 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Рулетка</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@700;900&display=swap");
+
+      :root {
+        --bg-deep: #0d0616;
+        --drum-bg: #12062a;
+        --purple-glow: #6b21a8;
+        --pink-hot: #e91e8c;
+        --gold: #fbbf24;
+        --white: #ffffff;
+        --drum-border: rgba(107, 33, 168, 0.5);
+        --win-green: #22c55e;
+
+        /* Portrait-friendly drums */
+        --drum-w: clamp(52px, 14vw, 120px);
+        --drum-h: clamp(140px, 42vw, 380px);
+        --item-h: calc(var(--drum-h) / 3);
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background: var(--bg-deep);
+        font-family: "Nunito", sans-serif;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow-x: hidden;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background:
+          radial-gradient(
+            ellipse 80% 50% at 20% 20%,
+            rgba(107, 33, 168, 0.18) 0%,
+            transparent 60%
+          ),
+          radial-gradient(
+            ellipse 60% 40% at 80% 80%,
+            rgba(233, 30, 140, 0.12) 0%,
+            transparent 60%
+          );
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      .roulette-wrapper {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        max-width: 920px;
+        margin: 0 auto;
+        padding: clamp(16px, 3vw, 32px) clamp(10px, 2vw, 24px);
+      }
+
+      .machine-body {
+        background: linear-gradient(160deg, #1a0933 0%, #120626 100%);
+        border: 1.5px solid var(--drum-border);
+        border-radius: 24px;
+        padding: clamp(14px, 2.5vw, 28px) clamp(10px, 2vw, 24px);
+        box-shadow:
+          0 0 60px rgba(107, 33, 168, 0.25),
+          0 0 120px rgba(233, 30, 140, 0.08),
+          inset 0 1px 0 rgba(255, 255, 255, 0.07);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .machine-body::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 70%;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(233, 30, 140, 0.6),
+          transparent
+        );
+      }
+
+      .drums-row {
+        display: flex;
+        gap: clamp(5px, 1.1vw, 12px);
+        justify-content: center;
+        align-items: center;
+        margin-bottom: clamp(16px, 2.5vw, 28px);
+      }
+
+      .drum {
+        width: var(--drum-w);
+        height: var(--drum-h);
+        flex-shrink: 0;
+        background: var(--drum-bg);
+        border: 1.5px solid rgba(107, 33, 168, 0.45);
+        border-radius: clamp(8px, 1.5vw, 16px);
+        overflow: hidden;
+        position: relative;
+        box-shadow:
+          inset 0 0 24px rgba(0, 0, 0, 0.55),
+          0 0 0 1px rgba(233, 30, 140, 0.06);
+        transition:
+          border-color 0.4s,
+          box-shadow 0.4s;
+      }
+
+      .drum::before,
+      .drum::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        height: 33%;
+        z-index: 3;
+        pointer-events: none;
+      }
+      .drum::before {
+        top: 0;
+        background: linear-gradient(to bottom, var(--drum-bg), transparent);
+      }
+      .drum::after {
+        bottom: 0;
+        background: linear-gradient(to top, var(--drum-bg), transparent);
+      }
+
+      .drum-highlight {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        height: var(--item-h);
+        z-index: 2;
+        pointer-events: none;
+        border-top: 1.5px solid rgba(233, 30, 140, 0.5);
+        border-bottom: 1.5px solid rgba(233, 30, 140, 0.5);
+        background: rgba(233, 30, 140, 0.06);
+        transition:
+          border-color 0.4s,
+          background 0.4s,
+          box-shadow 0.4s;
+      }
+
+      .drum.winner {
+        border-color: var(--gold);
+        box-shadow:
+          0 0 30px rgba(251, 191, 36, 0.45),
+          inset 0 0 24px rgba(0, 0, 0, 0.55);
+      }
+      .drum.winner .drum-highlight {
+        border-color: var(--gold);
+        background: rgba(251, 191, 36, 0.1);
+        box-shadow: 0 0 16px rgba(251, 191, 36, 0.25);
+      }
+
+      .drum-track {
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+      }
+
+      .drum-item {
+        width: 100%;
+        height: var(--item-h);
+        flex-shrink: 0;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .drum-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center top;
+        display: block;
+        pointer-events: none;
+        user-select: none;
+      }
+
+      .drum-item .sym-fallback {
+        font-size: clamp(26px, 4.5vw, 52px);
+        line-height: 1;
+        filter: drop-shadow(0 0 8px rgba(233, 30, 140, 0.5));
+        user-select: none;
+      }
+
+      .controls {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: clamp(10px, 1.8vw, 18px);
+      }
+
+      .result-message {
+        min-height: 58px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .result-inner {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 24px;
+        border-radius: 50px;
+        font-weight: 900;
+        opacity: 0;
+        transform: scale(0.88);
+        transition:
+          opacity 0.35s ease,
+          transform 0.35s ease;
+        text-align: center;
+        max-width: 95%;
+      }
+      .result-inner.visible {
+        opacity: 1;
+        transform: scale(1);
+      }
+      .result-inner.win {
+        background: rgba(34, 197, 94, 0.12);
+        border: 1.5px solid rgba(34, 197, 94, 0.45);
+        color: var(--win-green);
+        box-shadow: 0 0 28px rgba(34, 197, 94, 0.18);
+      }
+      .result-icon {
+        font-size: clamp(20px, 3vw, 28px);
+        flex-shrink: 0;
+      }
+      .result-title {
+        display: block;
+        font-family: "Bebas Neue", sans-serif;
+        font-size: clamp(16px, 2.6vw, 26px);
+        letter-spacing: 1px;
+      }
+      .result-sub {
+        display: block;
+        font-size: clamp(11px, 1.4vw, 14px);
+        opacity: 0.8;
+        font-weight: 700;
+        margin-top: 2px;
+      }
+
+      .redeem-banner {
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        padding: 14px 18px;
+        border-radius: 16px;
+        border: 1.5px solid rgba(251, 191, 36, 0.45);
+        background: rgba(251, 191, 36, 0.08);
+        color: var(--gold);
+        font-weight: 800;
+        text-align: center;
+        max-width: 100%;
+      }
+      .redeem-banner.visible {
+        display: flex;
+      }
+      .redeem-banner code {
+        font-size: clamp(18px, 4vw, 26px);
+        letter-spacing: 2px;
+        background: rgba(0, 0, 0, 0.35);
+        padding: 8px 14px;
+        border-radius: 10px;
+      }
+
+      .spin-btn {
+        position: relative;
+        background: linear-gradient(135deg, var(--pink-hot) 0%, #c026d3 100%);
+        color: #fff;
+        border: none;
+        border-radius: 50px;
+        font-family: "Bebas Neue", sans-serif;
+        font-size: clamp(17px, 2.8vw, 28px);
+        letter-spacing: 3px;
+        padding: clamp(12px, 1.8vw, 17px) clamp(32px, 7vw, 70px);
+        cursor: pointer;
+        transition:
+          transform 0.15s,
+          box-shadow 0.15s,
+          opacity 0.2s;
+        box-shadow:
+          0 8px 32px rgba(233, 30, 140, 0.45),
+          inset 0 2px 0 rgba(255, 255, 255, 0.15);
+        overflow: hidden;
+        min-width: 190px;
+      }
+      .spin-btn::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -60%;
+        width: 40%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.18),
+          transparent
+        );
+        transform: skewX(-20deg);
+        transition: left 0.5s;
+      }
+      .spin-btn:hover::after {
+        left: 140%;
+      }
+      .spin-btn:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow:
+          0 12px 40px rgba(233, 30, 140, 0.6),
+          inset 0 2px 0 rgba(255, 255, 255, 0.15);
+      }
+      .spin-btn:active:not(:disabled) {
+        transform: translateY(0);
+      }
+      .spin-btn:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+
+      .loading-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(13, 6, 22, 0.72);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+        border-radius: 24px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s;
+      }
+      .loading-overlay.active {
+        opacity: 1;
+        pointer-events: all;
+      }
+      .spinner {
+        width: 44px;
+        height: 44px;
+        border: 3px solid rgba(233, 30, 140, 0.2);
+        border-top-color: var(--pink-hot);
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .jackpot-flash {
+        position: absolute;
+        inset: 0;
+        border-radius: 24px;
+        pointer-events: none;
+        z-index: 5;
+        opacity: 0;
+      }
+      .jackpot-flash.active {
+        animation: jpulse 0.5s ease 3;
+      }
+      @keyframes jpulse {
+        0% {
+          opacity: 0;
+          box-shadow: inset 0 0 0 rgba(251, 191, 36, 0);
+        }
+        50% {
+          opacity: 1;
+          box-shadow: inset 0 0 70px rgba(251, 191, 36, 0.3);
+        }
+        100% {
+          opacity: 0;
+          box-shadow: inset 0 0 0 rgba(251, 191, 36, 0);
+        }
+      }
+
+      .sep {
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(107, 33, 168, 0.4),
+          transparent
+        );
+        margin: clamp(12px, 2vw, 20px) 0;
+      }
+      .error-msg {
+        color: #f87171;
+        font-size: 12px;
+        font-weight: 700;
+        text-align: center;
+        min-height: 18px;
+      }
+
+      /* Telegram gate modal */
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        background: rgba(8, 3, 18, 0.82);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+      .modal-backdrop.active {
+        display: flex;
+      }
+      .modal-box {
+        background: linear-gradient(160deg, #1a0933 0%, #120626 100%);
+        border: 1.5px solid var(--drum-border);
+        border-radius: 20px;
+        padding: 24px;
+        max-width: 400px;
+        text-align: center;
+        color: var(--white);
+        box-shadow: 0 0 48px rgba(107, 33, 168, 0.35);
+      }
+      .modal-box h2 {
+        font-family: "Bebas Neue", sans-serif;
+        letter-spacing: 2px;
+        margin-bottom: 12px;
+      }
+      .modal-box p {
+        font-size: 14px;
+        line-height: 1.5;
+        opacity: 0.9;
+        margin-bottom: 18px;
+      }
+      .modal-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .modal-actions button {
+        border: none;
+        border-radius: 50px;
+        padding: 12px 20px;
+        font-weight: 800;
+        cursor: pointer;
+        font-family: "Nunito", sans-serif;
+      }
+      .btn-primary {
+        background: linear-gradient(135deg, var(--pink-hot), #c026d3);
+        color: #fff;
+      }
+      .btn-ghost {
+        background: transparent;
+        color: #c4b5fd;
+        border: 1px solid rgba(167, 139, 250, 0.35);
+      }
+
+      /* Win overlay — vertical portraits */
+      .win-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 90;
+        background: rgba(10, 4, 22, 0.92);
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: clamp(12px, 4vw, 28px);
+        gap: 16px;
+      }
+      .win-overlay.active {
+        display: flex;
+      }
+      .win-photos {
+        display: flex;
+        gap: clamp(4px, 1.2vw, 10px);
+        justify-content: center;
+        align-items: flex-end;
+        max-width: 100%;
+        overflow-x: auto;
+        padding-bottom: 4px;
+      }
+      .win-photos img {
+        width: clamp(56px, 16vw, 110px);
+        height: clamp(140px, 38vw, 300px);
+        object-fit: cover;
+        object-position: center top;
+        border-radius: 12px;
+        border: 2px solid var(--gold);
+        box-shadow: 0 0 24px rgba(251, 191, 36, 0.25);
+        flex-shrink: 0;
+      }
+      .win-overlay h3 {
+        font-family: "Bebas Neue", sans-serif;
+        color: var(--gold);
+        letter-spacing: 2px;
+        font-size: clamp(22px, 5vw, 34px);
+        text-align: center;
+      }
+      .win-overlay .win-prize-desc {
+        color: #e9d5ff;
+        text-align: center;
+        max-width: 420px;
+        font-size: 14px;
+        font-weight: 700;
+      }
+      .win-code-wrap {
+        text-align: center;
+      }
+      .win-code-wrap code {
+        display: inline-block;
+        margin-top: 8px;
+        font-size: clamp(18px, 4.5vw, 26px);
+        letter-spacing: 3px;
+        color: var(--win-green);
+        background: rgba(34, 197, 94, 0.12);
+        padding: 12px 18px;
+        border-radius: 12px;
+        border: 1px solid rgba(34, 197, 94, 0.35);
+      }
+      .win-hint {
+        color: #c4b5fd;
+        font-size: 13px;
+        max-width: 420px;
+        text-align: center;
+        line-height: 1.45;
+      }
+      .copy-btn {
+        margin-top: 10px;
+        background: rgba(107, 33, 168, 0.5);
+        color: #fff;
+        border: none;
+        padding: 10px 18px;
+        border-radius: 999px;
+        font-weight: 800;
+        cursor: pointer;
+      }
+      .win-close {
+        margin-top: 8px;
+        background: transparent;
+        color: #a78bfa;
+        border: 1px solid rgba(167, 139, 250, 0.4);
+        padding: 10px 22px;
+        border-radius: 999px;
+        cursor: pointer;
+        font-weight: 700;
+      }
+
+      .machine-body.dimmed .drums-row,
+      .machine-body.dimmed .controls .spin-btn {
+        opacity: 0.15;
+        pointer-events: none;
+      }
+
+      @media (max-width: 480px) {
+        .machine-body {
+          border-radius: 16px;
+        }
+        .spin-btn {
+          min-width: 150px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      class="modal-backdrop"
+      id="tgModal"
+      role="dialog"
+      aria-labelledby="tgTitle"
+      aria-modal="true"
+    >
+      <div class="modal-box">
+        <h2 id="tgTitle">Переход в Telegram</h2>
+        <p>
+          Для игры нужен бот в Telegram. Сейчас вы покинете страницу и перейдёте
+          в приложение или на сайт Telegram. После авторизации бот пришлёт ссылку
+          обратно сюда — тогда можно будет крутить колесо один раз.
+        </p>
+        <div class="modal-actions">
+          <button type="button" class="btn-primary" id="tgConfirm">
+            Перейти в бот
+          </button>
+          <button type="button" class="btn-ghost" id="tgCancel">Отмена</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="win-overlay" id="winOverlay" aria-live="polite">
+      <div class="win-photos" id="winPhotos"></div>
+      <h3 id="winOverlayTitle">Ваш приз</h3>
+      <p class="win-prize-desc" id="winOverlayDesc"></p>
+      <div class="win-code-wrap">
+        <div class="win-hint" id="winOverlayHint"></div>
+        <code id="winOverlayCode"></code>
+        <div>
+          <button type="button" class="copy-btn" id="copyCodeBtn">
+            Скопировать код
+          </button>
+        </div>
+      </div>
+      <button type="button" class="win-close" id="winOverlayClose">
+        Закрыть
+      </button>
+    </div>
+
+    <div class="roulette-wrapper">
+      <div class="machine-body" id="machineBody">
+        <div class="jackpot-flash" id="jackpotFlash"></div>
+        <div class="loading-overlay" id="loadingOverlay">
+          <div class="spinner"></div>
+        </div>
+
+        <div class="drums-row" id="drumsRow"></div>
+
+        <div class="sep"></div>
+
+        <div class="controls">
+          <div
+            class="redeem-banner"
+            id="redeemBanner"
+            aria-live="polite"
+          >
+            <span>Вы уже крутили колесо.</span>
+            <code id="redeemBannerCode"></code>
+            <span class="win-hint" id="redeemBannerHint"></span>
+          </div>
+          <div class="result-message">
+            <div class="result-inner win" id="resultInner">
+              <span class="result-icon" id="resultIcon"></span>
+              <span class="result-text">
+                <span class="result-title" id="resultTitle"></span>
+                <span class="result-sub" id="resultSub"></span>
+              </span>
+            </div>
+          </div>
+          <button class="spin-btn" id="spinBtn" type="button">
+            🎰 КРУТИТЬ
+          </button>
+          <div class="error-msg" id="errorMsg"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const TG_BOT_URL =
+        "https://t.me/intriga_nsk_bot?start=bW9kZT13aGVlbF9nYW1l";
+      const SESSION_URL = "/api/session";
+      const SPIN_URL = "/api/spin";
+      const AUTH_URL = "/api/auth";
+
+      const DEFAULT_SYMBOLS = [
+        { id: "cherry", emoji: "🍒", imageUrl: "" },
+        { id: "diamond", emoji: "💎", imageUrl: "" },
+        { id: "star", emoji: "🌟", imageUrl: "" },
+        { id: "crown", emoji: "👑", imageUrl: "" },
+        { id: "champagne", emoji: "🥂", imageUrl: "" },
+        { id: "mask", emoji: "🎭", imageUrl: "" },
+        { id: "fire", emoji: "🔥", imageUrl: "" },
+        { id: "kiss", emoji: "💋", imageUrl: "" },
+        { id: "gift", emoji: "🎁", imageUrl: "" },
+        { id: "joker", emoji: "🃏", imageUrl: "" },
+      ];
+
+      let SYMBOLS = DEFAULT_SYMBOLS.slice();
+      const DRUM_COUNT = 5;
+      const VISIBLE = 3;
+      let isSpinning = false;
+      let lastRedeemCode = "";
+      let lastRedeemHint = "";
+      let lastWinImageUrl = "";
+      let sessionState = {
+        authenticated: false,
+        can_spin: false,
+        already_spun: false,
+      };
+
+      function apiFetch(url, opts = {}) {
+        return fetch(url, {
+          credentials: "include",
+          ...opts,
+          headers: {
+            "Content-Type": "application/json",
+            ...opts.headers,
+          },
+        });
+      }
+
+      function getItemH() {
+        const el = document.createElement("div");
+        el.style.cssText =
+          "position:absolute;visibility:hidden;height:var(--item-h);width:1px;";
+        document.body.appendChild(el);
+        const h = el.offsetHeight || 116;
+        document.body.removeChild(el);
+        return h;
+      }
+
+      function makeItem(sym) {
+        const div = document.createElement("div");
+        div.className = "drum-item";
+        div.dataset.id = sym.id;
+        if (sym.imageUrl) {
+          const img = document.createElement("img");
+          img.src = sym.imageUrl;
+          img.alt = sym.id;
+          img.onerror = () => img.replaceWith(makeFallback(sym));
+          div.appendChild(img);
+        } else {
+          div.appendChild(makeFallback(sym));
+        }
+        return div;
+      }
+
+      function makeFallback(sym) {
+        const sp = document.createElement("span");
+        sp.className = "sym-fallback";
+        sp.textContent = sym.emoji;
+        return sp;
+      }
+
+      function buildDrums() {
+        const row = document.getElementById("drumsRow");
+        row.innerHTML = "";
+        for (let i = 0; i < DRUM_COUNT; i++) {
+          const drum = document.createElement("div");
+          drum.className = "drum";
+          drum.id = `drum-${i}`;
+
+          const hl = document.createElement("div");
+          hl.className = "drum-highlight";
+          drum.appendChild(hl);
+
+          const track = document.createElement("div");
+          track.className = "drum-track";
+          track.id = `track-${i}`;
+
+          for (let r = 0; r < 4; r++)
+            SYMBOLS.forEach((s) => track.appendChild(makeItem(s)));
+
+          drum.appendChild(track);
+          row.appendChild(drum);
+        }
+        resetDrums();
+      }
+
+      function resetDrums() {
+        const ih = getItemH();
+        for (let i = 0; i < DRUM_COUNT; i++) {
+          const t = document.getElementById(`track-${i}`);
+          if (!t) continue;
+          t.style.transition = "none";
+          t.style.transform = `translateY(-${SYMBOLS.length * ih}px)`;
+          document.getElementById(`drum-${i}`)?.classList.remove("winner");
+        }
+      }
+
+      function animateDrum(idx, targetId, delay) {
+        return new Promise((resolve) => {
+          const track = document.getElementById(`track-${idx}`);
+          if (!track) {
+            resolve();
+            return;
+          }
+
+          const ih = getItemH();
+          const symIdx = SYMBOLS.findIndex((s) => s.id === targetId);
+          const safe = symIdx >= 0 ? symIdx : 0;
+
+          const centre = Math.floor(VISIBLE / 2);
+          const targetAbs = SYMBOLS.length * 2 + safe;
+          const targetOff = (targetAbs - centre) * ih;
+
+          const currentOff = SYMBOLS.length * ih;
+          const rounds = 3 + idx;
+          const totalScroll =
+            currentOff +
+            rounds * SYMBOLS.length * ih +
+            (targetOff - currentOff);
+
+          setTimeout(() => {
+            track.style.transition = `transform ${1.55 + idx * 0.32}s cubic-bezier(0.22, 0.08, 0.08, 1.0)`;
+            track.style.transform = `translateY(-${totalScroll}px)`;
+            track.addEventListener(
+              "transitionend",
+              () => {
+                track.style.transition = "none";
+                track.style.transform = `translateY(-${targetOff}px)`;
+                resolve();
+              },
+              { once: true },
+            );
+          }, delay);
+        });
+      }
+
+      function applySymbolsFromSession(data) {
+        const map = data.symbol_images || {};
+        if (data.prizes && data.prizes.length > 0) {
+          SYMBOLS = data.prizes.map((p) => ({
+            id: p.id,
+            emoji: "🎁",
+            imageUrl: map[p.id] || "",
+          }));
+        } else {
+          SYMBOLS = DEFAULT_SYMBOLS.slice();
+          Object.keys(map).forEach((id) => {
+            const sym = SYMBOLS.find((s) => s.id === id);
+            if (sym) sym.imageUrl = map[id];
+          });
+        }
+      }
+
+      function updateRedeemBanner(data) {
+        const b = document.getElementById("redeemBanner");
+        if (data.already_spun && data.redeem_code) {
+          b.classList.add("visible");
+          document.getElementById("redeemBannerCode").textContent =
+            data.redeem_code;
+          document.getElementById("redeemBannerHint").textContent =
+            data.redeem_hint || "";
+        } else {
+          b.classList.remove("visible");
+        }
+      }
+
+      function setSpinEnabled(on) {
+        document.getElementById("spinBtn").disabled = !on;
+      }
+
+      function showTgModal() {
+        document.getElementById("tgModal").classList.add("active");
+      }
+
+      function hideTgModal() {
+        document.getElementById("tgModal").classList.remove("active");
+      }
+
+      function stripTokenFromUrl() {
+        const u = new URL(location.href);
+        if (!u.searchParams.has("token")) return;
+        u.searchParams.delete("token");
+        history.replaceState({}, "", u.pathname + u.search + u.hash);
+      }
+
+      async function tryAuthFromQuery() {
+        const params = new URLSearchParams(location.search);
+        const token = params.get("token");
+        if (!token) return false;
+        document.getElementById("loadingOverlay").classList.add("active");
+        try {
+          const r = await apiFetch(AUTH_URL, {
+            method: "POST",
+            body: JSON.stringify({ token }),
+          });
+          stripTokenFromUrl();
+          if (!r.ok) {
+            setError("Не удалось подтвердить вход. Откройте ссылку из бота ещё раз.");
+            return false;
+          }
+          return true;
+        } catch {
+          stripTokenFromUrl();
+          setError("Сеть недоступна при авторизации.");
+          return false;
+        } finally {
+          document.getElementById("loadingOverlay").classList.remove("active");
+        }
+      }
+
+      async function fetchSession() {
+        const r = await apiFetch(SESSION_URL, { method: "GET" });
+        if (r.status === 401) return { unauthorized: true };
+        if (!r.ok) return null;
+        return r.json();
+      }
+
+      function showResult(title, sub) {
+        const el = document.getElementById("resultInner");
+        el.classList.remove("visible");
+        setTimeout(() => {
+          document.getElementById("resultIcon").textContent = "🎉";
+          document.getElementById("resultTitle").textContent = title;
+          document.getElementById("resultSub").textContent = sub;
+          el.classList.add("win", "visible");
+        }, 60);
+      }
+
+      function setError(msg) {
+        document.getElementById("errorMsg").textContent = msg || "";
+      }
+
+      function openWinOverlay({ title, desc, code, hint, imageUrl }) {
+        const ov = document.getElementById("winOverlay");
+        const row = document.getElementById("winPhotos");
+        row.innerHTML = "";
+        const src = imageUrl || "";
+        for (let i = 0; i < DRUM_COUNT; i++) {
+          if (!src) continue;
+          const img = document.createElement("img");
+          img.src = src;
+          img.alt = "";
+          row.appendChild(img);
+        }
+        document.getElementById("winOverlayTitle").textContent =
+          title || "Поздравляем!";
+        document.getElementById("winOverlayDesc").textContent = desc || "";
+        document.getElementById("winOverlayHint").textContent = hint || "";
+        document.getElementById("winOverlayCode").textContent = code || "";
+        lastRedeemCode = code;
+        lastRedeemHint = hint;
+        ov.classList.add("active");
+        document.getElementById("machineBody").classList.add("dimmed");
+      }
+
+      function closeWinOverlay() {
+        document.getElementById("winOverlay").classList.remove("active");
+        document.getElementById("machineBody").classList.remove("dimmed");
+      }
+
+      document.getElementById("copyCodeBtn").onclick = async () => {
+        if (!lastRedeemCode) return;
+        try {
+          await navigator.clipboard.writeText(lastRedeemCode);
+        } catch {
+          /* ignore */
+        }
+      };
+
+      document.getElementById("winOverlayClose").onclick = closeWinOverlay;
+
+      document.getElementById("tgConfirm").onclick = () => {
+        hideTgModal();
+        window.location.href = TG_BOT_URL;
+      };
+
+      document.getElementById("tgCancel").onclick = hideTgModal;
+
+      document.getElementById("spinBtn").onclick = handleSpin;
+
+      async function handleSpin() {
+        if (isSpinning) return;
+        if (!sessionState.authenticated) {
+          showTgModal();
+          return;
+        }
+        if (!sessionState.can_spin) {
+          setError(
+            sessionState.already_spun
+              ? "Вы уже использовали прокрут."
+              : "Призы ещё не настроены. Зайдите позже.",
+          );
+          return;
+        }
+        isSpinning = true;
+        setError("");
+        document.getElementById("spinBtn").disabled = true;
+        document.getElementById("resultInner").classList.remove("visible");
+        resetDrums();
+        document.getElementById("loadingOverlay").classList.add("active");
+
+        let result;
+        try {
+          const r = await apiFetch(SPIN_URL, {
+            method: "POST",
+            body: JSON.stringify({ action: "spin" }),
+          });
+          const data = await r.json().catch(() => ({}));
+          if (r.status === 409) {
+            setError("Эта прокрутка уже была использована.");
+            if (data.redeem_code) {
+              updateRedeemBanner({
+                already_spun: true,
+                redeem_code: data.redeem_code,
+                redeem_hint: data.redeem_hint,
+              });
+            }
+            document.getElementById("loadingOverlay").classList.remove("active");
+            isSpinning = false;
+            setSpinEnabled(false);
+            return;
+          }
+          if (!r.ok) {
+            throw new Error(data.error || `HTTP ${r.status}`);
+          }
+          result = data;
+          if (result.symbol_images) {
+            applySymbolsFromSession({
+              symbol_images: result.symbol_images,
+              prizes: result.prizes || sessionState.prizesList || [],
+            });
+            buildDrums();
+            resetDrums();
+          }
+        } catch (e) {
+          setError(e.message || "Ошибка сервера");
+          document.getElementById("loadingOverlay").classList.remove("active");
+          isSpinning = false;
+          document.getElementById("spinBtn").disabled = false;
+          return;
+        }
+
+        document.getElementById("loadingOverlay").classList.remove("active");
+
+        const winId = result.symbols && result.symbols[0];
+        const syms =
+          result.symbols || Array(DRUM_COUNT).fill(SYMBOLS[0]?.id || "gift");
+        await Promise.all(syms.map((id, i) => animateDrum(i, id, i * 140)));
+
+        for (let i = 0; i < DRUM_COUNT; i++)
+          document.getElementById(`drum-${i}`)?.classList.add("winner");
+        const fl = document.getElementById("jackpotFlash");
+        fl.classList.add("active");
+        setTimeout(() => fl.classList.remove("active"), 1600);
+
+        showResult(
+          result.prize || "ВЫ ВЫИГРАЛИ!",
+          result.prize_description || "",
+        );
+
+        const imgMap = result.symbol_images || {};
+        lastWinImageUrl = winId ? imgMap[winId] || "" : "";
+        openWinOverlay({
+          title: result.prize,
+          desc: result.prize_description,
+          code: result.redeem_code,
+          hint: result.redeem_hint,
+          imageUrl: lastWinImageUrl,
+        });
+
+        sessionState.can_spin = false;
+        sessionState.already_spun = true;
+        updateRedeemBanner({
+          already_spun: true,
+          redeem_code: result.redeem_code,
+          redeem_hint: result.redeem_hint,
+        });
+
+        isSpinning = false;
+        setSpinEnabled(false);
+      }
+
+      async function init() {
+        buildDrums();
+        document.getElementById("loadingOverlay").classList.add("active");
+
+        await tryAuthFromQuery();
+
+        const session = await fetchSession();
+        document.getElementById("loadingOverlay").classList.remove("active");
+
+        if (!session || session.unauthorized) {
+          sessionState.authenticated = false;
+          setSpinEnabled(true);
+          applySymbolsFromSession({ symbol_images: {}, prizes: [] });
+          buildDrums();
+          return;
+        }
+
+        sessionState = {
+          authenticated: true,
+          can_spin: session.can_spin,
+          already_spun: session.already_spun,
+          prizesList: session.prizes,
+        };
+        applySymbolsFromSession(session);
+        buildDrums();
+        updateRedeemBanner(session);
+        setSpinEnabled(session.can_spin && !session.already_spun);
+
+        if (!session.can_spin && !session.already_spun) {
+          setError("Нет активных призов. Обратитесь к администратору.");
+        }
+      }
+
+      init();
+    </script>
+  </body>
+</html>
