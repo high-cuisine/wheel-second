@@ -1,0 +1,25 @@
+services:
+  wheel:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      JWT_SECRET: ${JWT_SECRET:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      JWT_ISSUER: ${JWT_ISSUER:-}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:-}
+      REDEEM_HINT: ${REDEEM_HINT:-}
+      # true только за HTTPS (иначе cookie не ставятся в браузере)
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+    volumes:
+      - wheel_data:/app/data
+      - wheel_uploads:/app/uploads
+    restart: unless-stopped
+
+volumes:
+  wheel_data:
+  wheel_uploads:
