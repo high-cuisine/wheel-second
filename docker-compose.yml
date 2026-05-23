@@ -14,8 +14,8 @@ services:
       JWT_ISSUER: ${JWT_ISSUER:-}
       JWT_AUDIENCE: ${JWT_AUDIENCE:-}
       REDEEM_HINT: ${REDEEM_HINT:-}
-      # true только за HTTPS (иначе cookie не ставятся в браузере)
-      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      # true за HTTPS (обязательно для SameSite=None при кросс-доменных запросах)
+      COOKIE_SECURE: ${COOKIE_SECURE:-true}
     volumes:
       - wheel_data:/app/data
       - wheel_uploads:/app/uploads
