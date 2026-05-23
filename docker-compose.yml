@@ -16,6 +16,7 @@ services:
       REDEEM_HINT: ${REDEEM_HINT:-}
       # true за HTTPS (обязательно для SameSite=None при кросс-доменных запросах)
       COOKIE_SECURE: ${COOKIE_SECURE:-true}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-https://sainep.pro}
     volumes:
       - wheel_data:/app/data
       - wheel_uploads:/app/uploads

@@ -38,6 +38,9 @@ const REDEEM_HINT =
   process.env.REDEEM_HINT ||
   "Покажите этот код менеджеру в заведении.";
 
+/** Base URL for absolute image links (e.g. https://sainep.pro). Empty = relative paths. */
+const PUBLIC_BASE_URL = (process.env.PUBLIC_BASE_URL || "").replace(/\/$/, "");
+
 /** Set COOKIE_SECURE=true behind HTTPS (reverse proxy). */
 const COOKIE_SECURE = process.env.COOKIE_SECURE === "true";
 
@@ -149,7 +152,7 @@ function getActivePrizes(db) {
 function symbolImagesFromPrizes(prizes) {
   const m = {};
   for (const p of prizes) {
-    m[prizeKey(p.id)] = `/uploads/${path.basename(p.image_path)}`;
+    m[prizeKey(p.id)] = `${PUBLIC_BASE_URL}/uploads/${path.basename(p.image_path)}`;
   }
   return m;
 }
