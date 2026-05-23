@@ -161,6 +161,8 @@
 
     <section id="loginSection">
       <h2>Вход</h2>
+      <label>Логин</label>
+      <input type="text" id="adminLogin" autocomplete="username" />
       <label>Пароль</label>
       <input type="password" id="adminPassword" autocomplete="current-password" />
       <button type="button" id="loginBtn">Войти</button>
@@ -324,11 +326,12 @@
       }
 
       document.getElementById("loginBtn").onclick = async () => {
+        const login = document.getElementById("adminLogin").value;
         const pw = document.getElementById("adminPassword").value;
         const msg = document.getElementById("loginMsg");
         const r = await api("/api/admin/login", {
           method: "POST",
-          body: JSON.stringify({ password: pw }),
+          body: JSON.stringify({ login, password: pw }),
         });
         if (r.ok) {
           show(msg, "Вход выполнен", true);

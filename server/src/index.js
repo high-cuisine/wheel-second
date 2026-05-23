@@ -22,6 +22,7 @@ const PORT = Number(process.env.PORT) || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || "";
 const JWT_ISSUER = process.env.JWT_ISSUER || undefined;
 const JWT_AUDIENCE = process.env.JWT_AUDIENCE || undefined;
+const ADMIN_LOGIN = process.env.ADMIN_LOGIN || "admin";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
 
 const DATABASE_PATH =
@@ -367,9 +368,10 @@ app.post("/api/admin/login", (req, res) => {
   if (!ADMIN_PASSWORD) {
     return res.status(500).json({ error: "ADMIN_PASSWORD not set" });
   }
+  const login = req.body?.login;
   const pw = req.body?.password;
-  if (pw !== ADMIN_PASSWORD) {
-    return res.status(401).json({ error: "invalid password" });
+  if (login !== ADMIN_LOGIN || pw !== ADMIN_PASSWORD) {
+    return res.status(401).json({ error: "invalid credentials" });
   }
   const t = nowMs();
   const sid = uuidv4().replace(/-/g, "") + uuidv4().replace(/-/g, "");
@@ -561,5 +563,8 @@ app.listen(PORT, "0.0.0.0", () => {
   }
   if (!ADMIN_PASSWORD) {
     console.warn("Warning: ADMIN_PASSWORD is empty — admin login disabled.");
+  }
+  if (!process.env.ADMIN_LOGIN) {
+    console.warn(`Warning: ADMIN_LOGIN not set, defaulting to "${ADMIN_LOGIN}".`);
   }
 });
