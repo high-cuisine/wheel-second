@@ -1,0 +1,1124 @@
+<!-- Вставить целиком в блок T123 (HTML-код) на Tilda -->
+
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@700;900&display=swap");
+
+#slot-root {
+  --gold: #ffd700;
+  --gold-dark: #c45500;
+  --pink: #e91e8c;
+  --purple: #6b21a8;
+  --dark-bg: #070114;
+  --machine-bg: #0e0320;
+  --drum-bg: #050010;
+  --win-green: #22c55e;
+  --white: #ffffff;
+  --drum-w: 80px;
+  --drum-h: 300px;
+  --item-h: 100px;
+  box-sizing: border-box;
+  font-family: "Nunito", sans-serif;
+  background: radial-gradient(ellipse at 50% 30%, #1a0533 0%, #070114 60%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  width: 100%;
+}
+
+#slot-root *, #slot-root *::before, #slot-root *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* SLOT MACHINE OUTER */
+#slot-root .slot-machine {
+  width: 100%;
+  max-width: 700px;
+  position: relative;
+}
+
+/* BLINKING LIGHTS */
+#slot-root .slot-lights {
+  height: 14px;
+  border-radius: 8px 8px 0 0;
+  background: repeating-linear-gradient(90deg,
+    #ffd700 0, #ffd700 8px,
+    #ff006e 8px, #ff006e 16px,
+    #00d4ff 16px, #00d4ff 24px,
+    #ff8c00 24px, #ff8c00 32px
+  );
+  position: relative;
+  overflow: hidden;
+}
+#slot-root .slot-lights::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(90deg,
+    transparent 0, transparent 8px,
+    rgba(0,0,0,0.55) 8px, rgba(0,0,0,0.55) 16px,
+    transparent 16px, transparent 24px,
+    rgba(0,0,0,0.55) 24px, rgba(0,0,0,0.55) 32px
+  );
+  animation: sr-blink-alt 0.8s step-end infinite;
+}
+#slot-root .slot-lights-bottom {
+  height: 14px;
+  border-radius: 0 0 8px 8px;
+  background: repeating-linear-gradient(90deg,
+    #ff006e 0, #ff006e 8px,
+    #00d4ff 8px, #00d4ff 16px,
+    #ffd700 16px, #ffd700 24px,
+    #8b00ff 24px, #8b00ff 32px
+  );
+  position: relative;
+  overflow: hidden;
+}
+#slot-root .slot-lights-bottom::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(90deg,
+    rgba(0,0,0,0.55) 0, rgba(0,0,0,0.55) 8px,
+    transparent 8px, transparent 16px,
+    rgba(0,0,0,0.55) 16px, rgba(0,0,0,0.55) 24px,
+    transparent 24px, transparent 32px
+  );
+  animation: sr-blink-alt 0.8s step-end 0.4s infinite;
+}
+@keyframes sr-blink-alt {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
+}
+
+/* GAME HEADER */
+#slot-root .game-header {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(180deg, #16042e 0%, #0e0320 100%);
+  border-left: 3px solid var(--gold);
+  border-right: 3px solid var(--gold);
+  border-top: 1px solid rgba(255,215,0,0.3);
+  padding: 10px 14px;
+  gap: 10px;
+}
+#slot-root .game-header-left {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+#slot-root .question-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffe066, #ff8c00);
+  color: #000;
+  border: 2px solid rgba(255,255,255,0.25);
+  font-weight: 900;
+  font-size: 18px;
+  cursor: pointer;
+  flex-shrink: 0;
+  box-shadow: 0 0 12px rgba(255,200,0,0.4), 0 3px 0 #7a3200;
+}
+#slot-root .header-ticker {
+  flex: 1;
+  min-width: 0;
+  background: rgba(0,0,0,0.35);
+  border: 1px solid rgba(255,215,0,0.25);
+  border-radius: 6px;
+  padding: 5px 8px;
+  overflow: hidden;
+}
+#slot-root .header-ticker marquee {
+  color: var(--gold);
+  font-size: 12px;
+  font-weight: 700;
+}
+#slot-root .game-header-center {
+  flex-shrink: 0;
+  text-align: center;
+}
+#slot-root .machine-logo {
+  font-family: "Bebas Neue", sans-serif;
+  font-size: clamp(18px, 3.5vw, 28px);
+  letter-spacing: 4px;
+  color: var(--gold);
+  text-shadow: 0 0 16px rgba(255,215,0,0.7), 0 0 32px rgba(255,150,0,0.4);
+  line-height: 1;
+  white-space: nowrap;
+}
+#slot-root .machine-logo-sub {
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: rgba(255,215,0,0.5);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+#slot-root .game-header-right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+#slot-root .attempts-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(255,215,0,0.35);
+  border-radius: 20px;
+  padding: 5px 10px;
+}
+#slot-root .attempts-num {
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 22px;
+  color: var(--gold);
+  line-height: 1;
+}
+#slot-root .attempts-label {
+  color: #e9d5ff;
+  font-size: 10px;
+  font-weight: 700;
+}
+#slot-root .attempts-heart { color: var(--pink); font-size: 14px; }
+#slot-root .header-close-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(233,30,140,0.2);
+  border: 1px solid rgba(233,30,140,0.5);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+#slot-root .header-close-btn:hover { background: rgba(233,30,140,0.5); }
+
+/* MACHINE BODY */
+#slot-root #sr-machineBody {
+  background: linear-gradient(180deg, #0e0320 0%, #070114 100%);
+  border-left: 3px solid var(--gold);
+  border-right: 3px solid var(--gold);
+  position: relative;
+  overflow: hidden;
+}
+
+#slot-root .jackpot-flash {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  opacity: 0;
+}
+#slot-root .jackpot-flash.active { animation: sr-jpulse 0.5s ease 3; }
+@keyframes sr-jpulse {
+  0% { opacity: 0; box-shadow: inset 0 0 0 rgba(255,215,0,0); }
+  50% { opacity: 1; box-shadow: inset 0 0 80px rgba(255,215,0,0.35); }
+  100% { opacity: 0; box-shadow: inset 0 0 0 rgba(255,215,0,0); }
+}
+
+#slot-root .loading-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(7,1,20,0.78);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+#slot-root .loading-overlay.active { opacity: 1; pointer-events: all; }
+#slot-root .spinner {
+  width: 44px;
+  height: 44px;
+  border: 3px solid rgba(255,215,0,0.15);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: sr-spin 0.7s linear infinite;
+}
+@keyframes sr-spin { to { transform: rotate(360deg); } }
+
+/* DRUMS */
+#slot-root .drums-section {
+  padding: 20px 16px 16px;
+}
+#slot-root .drums-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+#slot-root .drum {
+  width: var(--drum-w);
+  height: var(--drum-h);
+  flex-shrink: 0;
+  background: var(--drum-bg);
+  border: 2px solid rgba(255,215,0,0.22);
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 0 30px rgba(0,0,0,0.7), 0 0 0 1px rgba(233,30,140,0.06);
+  transition: border-color 0.4s, box-shadow 0.4s;
+}
+#slot-root .drum::before, #slot-root .drum::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0;
+  height: 30%;
+  z-index: 3;
+  pointer-events: none;
+}
+#slot-root .drum::before { top: 0; background: linear-gradient(to bottom, var(--drum-bg), transparent); }
+#slot-root .drum::after  { bottom: 0; background: linear-gradient(to top, var(--drum-bg), transparent); }
+#slot-root .drum-highlight {
+  position: absolute;
+  left: 0; right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: var(--item-h);
+  z-index: 2;
+  pointer-events: none;
+  border-top: 2px solid rgba(255,215,0,0.4);
+  border-bottom: 2px solid rgba(255,215,0,0.4);
+  background: rgba(255,215,0,0.04);
+  transition: border-color 0.4s, background 0.4s, box-shadow 0.4s;
+}
+#slot-root .drum.winner {
+  border-color: var(--gold);
+  box-shadow: 0 0 30px rgba(255,215,0,0.45), inset 0 0 24px rgba(0,0,0,0.55);
+}
+#slot-root .drum.winner .drum-highlight {
+  border-color: var(--gold);
+  background: rgba(255,215,0,0.1);
+  box-shadow: 0 0 20px rgba(255,215,0,0.3);
+}
+#slot-root .drum-track {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  left: 0; right: 0; top: 0;
+}
+#slot-root .drum-item {
+  width: 100%;
+  height: var(--item-h);
+  flex-shrink: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#slot-root .drum-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+  pointer-events: none;
+  user-select: none;
+}
+#slot-root .drum-item .sym-fallback {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border-radius: 6px;
+}
+
+/* BOTTOM BAR */
+#slot-root .slot-bottom-bar {
+  display: flex;
+  align-items: stretch;
+  border-top: 2px solid rgba(255,215,0,0.18);
+  min-height: 110px;
+}
+#slot-root .slot-bottom-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  border-right: 1px solid rgba(255,215,0,0.12);
+  gap: 6px;
+}
+#slot-root .prizes-label {
+  color: #c4b5fd;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-align: center;
+  line-height: 1.4;
+}
+#slot-root .prizes-arrows {
+  display: flex;
+  gap: 2px;
+  color: var(--gold);
+  font-size: 18px;
+  line-height: 1;
+}
+#slot-root .prizes-arrows span { animation: sr-pulse-arr 1.2s ease-in-out infinite; }
+#slot-root .prizes-arrows span:nth-child(2) { animation-delay: 0.2s; }
+#slot-root .prizes-arrows span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes sr-pulse-arr {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 1; }
+}
+#slot-root .slot-bottom-center {
+  flex-shrink: 0;
+  width: 150px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 10px;
+  gap: 8px;
+}
+#slot-root .knob-btn {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  background: radial-gradient(circle at 35% 30%, #ffe066, #ffaa00 50%, #c45500);
+  box-shadow:
+    0 6px 0 #6a2800,
+    0 8px 20px rgba(0,0,0,0.7),
+    0 0 28px rgba(255,160,0,0.45),
+    inset 0 2px 0 rgba(255,255,255,0.35),
+    inset 0 -2px 0 rgba(0,0,0,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 14px;
+  letter-spacing: 2px;
+  color: rgba(0,0,0,0.75);
+  transition: transform 0.1s, box-shadow 0.1s, opacity 0.2s;
+  position: relative;
+  top: 0;
+}
+#slot-root .knob-btn:hover:not(:disabled) {
+  box-shadow:
+    0 8px 0 #6a2800,
+    0 12px 28px rgba(0,0,0,0.7),
+    0 0 40px rgba(255,160,0,0.65),
+    inset 0 2px 0 rgba(255,255,255,0.35),
+    inset 0 -2px 0 rgba(0,0,0,0.2);
+  transform: translateY(-2px);
+  top: -2px;
+}
+#slot-root .knob-btn:active:not(:disabled) {
+  box-shadow:
+    0 2px 0 #6a2800,
+    0 4px 10px rgba(0,0,0,0.7),
+    0 0 16px rgba(255,160,0,0.3),
+    inset 0 2px 0 rgba(255,255,255,0.2),
+    inset 0 4px 6px rgba(0,0,0,0.3);
+  transform: translateY(4px);
+  top: 4px;
+}
+#slot-root .knob-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+#slot-root .error-msg {
+  color: #f87171;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+  min-height: 14px;
+}
+#slot-root .slot-bottom-right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  border-left: 1px solid rgba(255,215,0,0.12);
+  padding: 12px;
+  overflow: hidden;
+}
+#slot-root .bottom-ticker { width: 100%; overflow: hidden; }
+#slot-root .bottom-ticker marquee {
+  color: #c4b5fd;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* RESULT + REDEEM */
+#slot-root .result-area {
+  padding: 12px 16px;
+  border-left: 3px solid var(--gold);
+  border-right: 3px solid var(--gold);
+  border-top: 1px solid rgba(255,215,0,0.15);
+  background: linear-gradient(180deg, #070114 0%, #0a0215 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-height: 56px;
+}
+#slot-root .result-message {
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+#slot-root .result-inner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px;
+  border-radius: 50px;
+  font-weight: 900;
+  opacity: 0;
+  transform: scale(0.88);
+  transition: opacity 0.35s, transform 0.35s;
+  text-align: center;
+  max-width: 95%;
+}
+#slot-root .result-inner.visible { opacity: 1; transform: scale(1); }
+#slot-root .result-inner.win {
+  background: rgba(34,197,94,0.12);
+  border: 1.5px solid rgba(34,197,94,0.45);
+  color: var(--win-green);
+  box-shadow: 0 0 24px rgba(34,197,94,0.18);
+}
+#slot-root .result-icon { font-size: 22px; flex-shrink: 0; }
+#slot-root .result-title {
+  display: block;
+  font-family: "Bebas Neue", sans-serif;
+  font-size: clamp(14px, 2.4vw, 22px);
+  letter-spacing: 1px;
+}
+#slot-root .result-sub {
+  display: block;
+  font-size: 12px;
+  opacity: 0.8;
+  font-weight: 700;
+  margin-top: 2px;
+}
+#slot-root .redeem-banner {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 1.5px solid rgba(255,215,0,0.4);
+  background: rgba(255,215,0,0.07);
+  color: var(--gold);
+  font-weight: 800;
+  text-align: center;
+  width: 100%;
+}
+#slot-root .redeem-banner.visible { display: flex; }
+#slot-root .redeem-banner code {
+  font-size: clamp(16px, 3.5vw, 22px);
+  letter-spacing: 2px;
+  background: rgba(0,0,0,0.35);
+  padding: 6px 12px;
+  border-radius: 8px;
+}
+#slot-root .win-hint { color: #c4b5fd; font-size: 12px; }
+
+/* DIMMED */
+#slot-root #sr-machineBody.dimmed .drums-section,
+#slot-root #sr-machineBody.dimmed .knob-btn {
+  opacity: 0.15;
+  pointer-events: none;
+}
+
+/* TG MODAL */
+#sr-tgModal {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(7,1,20,0.9);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+#sr-tgModal.active { display: flex; }
+#sr-tgModal .modal-box {
+  background: linear-gradient(160deg, #1a0933 0%, #120626 100%);
+  border: 2px solid #ffd700;
+  border-radius: 20px;
+  padding: 28px 24px;
+  max-width: 360px;
+  width: 100%;
+  text-align: center;
+  color: #fff;
+  box-shadow: 0 0 48px rgba(255,215,0,0.25);
+  font-family: "Nunito", sans-serif;
+}
+#sr-tgModal .modal-box h2 {
+  font-family: "Bebas Neue", sans-serif;
+  letter-spacing: 2px;
+  font-size: 26px;
+  margin-bottom: 12px;
+  color: #ffd700;
+}
+#sr-tgModal .modal-box p {
+  font-size: 14px;
+  line-height: 1.55;
+  color: #c4b5fd;
+  margin-bottom: 22px;
+}
+#sr-tgModal .btn-tg {
+  display: block;
+  width: 100%;
+  background: radial-gradient(circle at 35% 30%, #ffe066, #ffaa00 50%, #c45500);
+  color: rgba(0,0,0,0.8);
+  border: none;
+  border-radius: 50px;
+  padding: 14px 20px;
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 20px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  box-shadow: 0 6px 0 #6a2800, 0 8px 24px rgba(0,0,0,0.5), 0 0 24px rgba(255,160,0,0.4);
+}
+
+/* WIN OVERLAY */
+#sr-winOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  background: rgba(7,1,20,0.94);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(12px, 4vw, 28px);
+  gap: 16px;
+  font-family: "Nunito", sans-serif;
+}
+#sr-winOverlay.active { display: flex; }
+#sr-winOverlay .win-photos {
+  display: flex;
+  gap: clamp(4px, 1.2vw, 10px);
+  justify-content: center;
+  align-items: flex-end;
+  max-width: 100%;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+#sr-winOverlay .win-photos img {
+  width: clamp(56px, 16vw, 110px);
+  height: clamp(140px, 38vw, 300px);
+  object-fit: cover;
+  object-position: center top;
+  border-radius: 12px;
+  border: 2px solid #ffd700;
+  box-shadow: 0 0 24px rgba(255,215,0,0.3);
+  flex-shrink: 0;
+}
+#sr-winOverlay h3 {
+  font-family: "Bebas Neue", sans-serif;
+  color: #ffd700;
+  letter-spacing: 2px;
+  font-size: clamp(22px, 5vw, 34px);
+  text-align: center;
+}
+#sr-winOverlay .win-prize-desc {
+  color: #e9d5ff;
+  text-align: center;
+  max-width: 420px;
+  font-size: 14px;
+  font-weight: 700;
+}
+#sr-winOverlay .win-code-wrap { text-align: center; }
+#sr-winOverlay .win-code-wrap code {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: clamp(18px, 4.5vw, 26px);
+  letter-spacing: 3px;
+  color: #22c55e;
+  background: rgba(34,197,94,0.12);
+  padding: 12px 18px;
+  border-radius: 12px;
+  border: 1px solid rgba(34,197,94,0.35);
+}
+#sr-winOverlay .copy-btn {
+  margin-top: 10px;
+  background: rgba(255,215,0,0.15);
+  color: #ffd700;
+  border: 1px solid rgba(255,215,0,0.3);
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: "Nunito", sans-serif;
+}
+#sr-winOverlay .win-close {
+  margin-top: 8px;
+  background: transparent;
+  color: #a78bfa;
+  border: 1px solid rgba(167,139,250,0.4);
+  padding: 10px 22px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 700;
+  font-family: "Nunito", sans-serif;
+}
+
+@media (max-width: 520px) {
+  #slot-root {
+    --drum-w: 52px;
+    --drum-h: 210px;
+    --item-h: 70px;
+  }
+  #slot-root .slot-bottom-center { width: 110px; }
+  #slot-root .knob-btn { width: 68px; height: 68px; font-size: 11px; }
+  #slot-root .machine-logo { font-size: 16px; letter-spacing: 2px; }
+  #slot-root .game-header { padding: 8px; gap: 6px; }
+  #slot-root .attempts-badge { padding: 4px 7px; }
+  #slot-root .attempts-label { display: none; }
+}
+</style>
+
+<!-- TG modal -->
+<div id="sr-tgModal">
+  <div class="modal-box">
+    <h2>Участвуй в розыгрыше</h2>
+    <p>Для игры нужен Telegram-бот. После перехода бот пришлёт ссылку обратно — тогда сможешь крутить колесо.</p>
+    <button type="button" class="btn-tg" id="sr-tgConfirm">Перейти в бот</button>
+  </div>
+</div>
+
+<!-- Win overlay -->
+<div id="sr-winOverlay" aria-live="polite">
+  <div class="win-photos" id="sr-winPhotos"></div>
+  <h3 id="sr-winOverlayTitle">Ваш приз</h3>
+  <p class="win-prize-desc" id="sr-winOverlayDesc"></p>
+  <div class="win-code-wrap">
+    <div class="win-hint" id="sr-winOverlayHint"></div>
+    <code id="sr-winOverlayCode"></code>
+    <div>
+      <button type="button" class="copy-btn" id="sr-copyCodeBtn">Скопировать код</button>
+    </div>
+  </div>
+  <button type="button" class="win-close" id="sr-winOverlayClose">Закрыть</button>
+</div>
+
+<!-- Slot Machine -->
+<div id="slot-root">
+  <div class="slot-machine">
+
+    <div class="slot-lights"></div>
+
+    <div class="game-header">
+      <div class="game-header-left">
+        <button class="question-btn" title="Правила">?</button>
+        <div class="header-ticker">
+          <marquee scrollamount="3">
+            🎉 Победи и приезжай за призом! Крути и выигрывай каждый день!
+          </marquee>
+        </div>
+      </div>
+      <div class="game-header-center">
+        <div class="machine-logo">SLOT MACHINE</div>
+        <div class="machine-logo-sub">Lucky Spin</div>
+      </div>
+      <div class="game-header-right">
+        <div class="attempts-badge">
+          <span class="attempts-num" id="sr-attemptsNum">1</span>
+          <span class="attempts-label">попытка</span>
+          <span class="attempts-heart">❤</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="sr-machineBody">
+      <div class="jackpot-flash" id="sr-jackpotFlash"></div>
+      <div class="loading-overlay" id="sr-loadingOverlay">
+        <div class="spinner"></div>
+      </div>
+
+      <div class="drums-section">
+        <div class="drums-row" id="sr-drumsRow"></div>
+      </div>
+
+      <div class="slot-bottom-bar">
+        <div class="slot-bottom-left">
+          <div class="prizes-label">Вы можете<br>выиграть</div>
+          <div class="prizes-arrows">
+            <span>›</span><span>›</span><span>›</span>
+          </div>
+        </div>
+        <div class="slot-bottom-center">
+          <button class="knob-btn" id="sr-spinBtn" type="button">SPIN</button>
+          <div class="error-msg" id="sr-errorMsg"></div>
+        </div>
+        <div class="slot-bottom-right">
+          <div class="bottom-ticker">
+            <marquee scrollamount="2">
+              🎁 Бесплатный вход на 2 персоны &nbsp;•&nbsp; Table Dance &nbsp;•&nbsp; Музыка заведения &nbsp;•&nbsp; VIP столик
+            </marquee>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="result-area">
+      <div class="redeem-banner" id="sr-redeemBanner" aria-live="polite">
+        <span>Вы уже крутили колесо.</span>
+        <code id="sr-redeemBannerCode"></code>
+        <span class="win-hint" id="sr-redeemBannerHint"></span>
+      </div>
+      <div class="result-message">
+        <div class="result-inner win" id="sr-resultInner">
+          <span class="result-icon" id="sr-resultIcon"></span>
+          <span class="result-text">
+            <span class="result-title" id="sr-resultTitle"></span>
+            <span class="result-sub" id="sr-resultSub"></span>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="slot-lights-bottom"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const TG_BOT_URL = "https://t.me/intriga_nsk_bot?start=bW9kZT13aGVlbF9nYW1l";
+  const SESSION_URL = "https://sainep.pro/api/session";
+  const SPIN_URL    = "https://sainep.pro/api/spin";
+  const AUTH_URL    = "https://sainep.pro/api/auth";
+
+  const FALLBACK_COLORS = [
+    "#e91e8c","#3b82f6","#f59e0b","#8b5cf6","#10b981",
+    "#ef4444","#f97316","#ec4899","#14b8a6","#a855f7",
+  ];
+  const DEFAULT_SYMBOLS = [
+    { id:"cherry",    imageUrl:"", color:FALLBACK_COLORS[0] },
+    { id:"diamond",   imageUrl:"", color:FALLBACK_COLORS[1] },
+    { id:"star",      imageUrl:"", color:FALLBACK_COLORS[2] },
+    { id:"crown",     imageUrl:"", color:FALLBACK_COLORS[3] },
+    { id:"champagne", imageUrl:"", color:FALLBACK_COLORS[4] },
+    { id:"mask",      imageUrl:"", color:FALLBACK_COLORS[5] },
+    { id:"fire",      imageUrl:"", color:FALLBACK_COLORS[6] },
+    { id:"kiss",      imageUrl:"", color:FALLBACK_COLORS[7] },
+    { id:"gift",      imageUrl:"", color:FALLBACK_COLORS[8] },
+    { id:"joker",     imageUrl:"", color:FALLBACK_COLORS[9] },
+  ];
+
+  let SYMBOLS = DEFAULT_SYMBOLS.slice();
+  const DRUM_COUNT = 5;
+  let isSpinning = false;
+  let lastRedeemCode = "";
+  let lastRedeemHint = "";
+  let lastWinImageUrl = "";
+  let sessionState = { authenticated: false, can_spin: false, already_spun: false };
+
+  function $id(id) { return document.getElementById(id); }
+
+  function apiFetch(url, opts = {}) {
+    return fetch(url, {
+      credentials: "include",
+      ...opts,
+      headers: { "Content-Type": "application/json", ...opts.headers },
+    });
+  }
+
+  function getItemH() {
+    const el = document.createElement("div");
+    el.style.cssText = "position:absolute;visibility:hidden;height:var(--item-h);width:1px;";
+    document.body.appendChild(el);
+    const h = el.offsetHeight || 100;
+    document.body.removeChild(el);
+    return h;
+  }
+
+  function makeItem(sym) {
+    const div = document.createElement("div");
+    div.className = "drum-item";
+    div.dataset.id = sym.id;
+    if (sym.imageUrl) {
+      const img = document.createElement("img");
+      img.src = sym.imageUrl;
+      img.alt = sym.id;
+      img.onerror = () => img.replaceWith(makeFallback(sym));
+      div.appendChild(img);
+    } else {
+      div.appendChild(makeFallback(sym));
+    }
+    return div;
+  }
+
+  function makeFallback(sym) {
+    const div = document.createElement("div");
+    div.className = "sym-fallback";
+    div.style.background = sym.color || FALLBACK_COLORS[0];
+    return div;
+  }
+
+  function buildDrums() {
+    const row = $id("sr-drumsRow");
+    row.innerHTML = "";
+    for (let i = 0; i < DRUM_COUNT; i++) {
+      const drum = document.createElement("div");
+      drum.className = "drum";
+      drum.id = `sr-drum-${i}`;
+      const hl = document.createElement("div");
+      hl.className = "drum-highlight";
+      drum.appendChild(hl);
+      const track = document.createElement("div");
+      track.className = "drum-track";
+      track.id = `sr-track-${i}`;
+      for (let r = 0; r < 4; r++) SYMBOLS.forEach(s => track.appendChild(makeItem(s)));
+      drum.appendChild(track);
+      row.appendChild(drum);
+    }
+    resetDrums();
+  }
+
+  function resetDrums() {
+    const ih = getItemH();
+    for (let i = 0; i < DRUM_COUNT; i++) {
+      const t = $id(`sr-track-${i}`);
+      if (!t) continue;
+      t.style.transition = "none";
+      t.style.transform = `translateY(-${SYMBOLS.length * ih}px)`;
+      $id(`sr-drum-${i}`)?.classList.remove("winner");
+    }
+  }
+
+  function animateDrum(idx, targetId, delay) {
+    return new Promise(resolve => {
+      const track = $id(`sr-track-${idx}`);
+      if (!track) { resolve(); return; }
+      const ih = getItemH();
+      const symIdx = SYMBOLS.findIndex(s => s.id === targetId);
+      const safe = symIdx >= 0 ? symIdx : 0;
+      const centre = 0.5;
+      const targetAbs = SYMBOLS.length * 2 + safe;
+      const targetOff = (targetAbs - centre) * ih;
+      const currentOff = SYMBOLS.length * ih;
+      const rounds = 3 + idx;
+      const totalScroll = currentOff + rounds * SYMBOLS.length * ih + (targetOff - currentOff);
+      setTimeout(() => {
+        track.style.transition = `transform ${1.55 + idx * 0.32}s cubic-bezier(0.22,0.08,0.08,1.0)`;
+        track.style.transform = `translateY(-${totalScroll}px)`;
+        track.addEventListener("transitionend", () => {
+          track.style.transition = "none";
+          track.style.transform = `translateY(-${targetOff}px)`;
+          resolve();
+        }, { once: true });
+      }, delay);
+    });
+  }
+
+  function applySymbolsFromSession(data) {
+    const map = data.symbol_images || {};
+    if (data.prizes && data.prizes.length > 0) {
+      SYMBOLS = data.prizes.map((p, i) => ({
+        id: p.id,
+        imageUrl: map[p.id] || "",
+        color: FALLBACK_COLORS[i % FALLBACK_COLORS.length],
+      }));
+    } else {
+      SYMBOLS = DEFAULT_SYMBOLS.slice();
+      Object.keys(map).forEach(id => {
+        const sym = SYMBOLS.find(s => s.id === id);
+        if (sym) sym.imageUrl = map[id];
+      });
+    }
+  }
+
+  function updateRedeemBanner(data) {
+    const b = $id("sr-redeemBanner");
+    if (data.already_spun && data.redeem_code) {
+      b.classList.add("visible");
+      $id("sr-redeemBannerCode").textContent = data.redeem_code;
+      $id("sr-redeemBannerHint").textContent = data.redeem_hint || "";
+    } else {
+      b.classList.remove("visible");
+    }
+  }
+
+  function setSpinEnabled(on) { $id("sr-spinBtn").disabled = !on; }
+  function setError(msg) { $id("sr-errorMsg").textContent = msg || ""; }
+
+  function showTgModal() { $id("sr-tgModal").classList.add("active"); }
+
+  function stripTokenFromUrl() {
+    const u = new URL(location.href);
+    if (!u.searchParams.has("token")) return;
+    u.searchParams.delete("token");
+    history.replaceState({}, "", u.pathname + u.search + u.hash);
+  }
+
+  async function tryAuthFromQuery() {
+    const token = new URLSearchParams(location.search).get("token");
+    if (!token) return false;
+    $id("sr-loadingOverlay").classList.add("active");
+    try {
+      const r = await apiFetch(AUTH_URL, { method: "POST", body: JSON.stringify({ token }) });
+      stripTokenFromUrl();
+      if (!r.ok) { setError("Не удалось подтвердить вход. Откройте ссылку из бота ещё раз."); return false; }
+      return true;
+    } catch {
+      stripTokenFromUrl();
+      setError("Сеть недоступна при авторизации.");
+      return false;
+    } finally {
+      $id("sr-loadingOverlay").classList.remove("active");
+    }
+  }
+
+  async function fetchSession() {
+    const r = await apiFetch(SESSION_URL, { method: "GET" });
+    if (r.status === 401) return { unauthorized: true };
+    if (!r.ok) return null;
+    return r.json();
+  }
+
+  function showResult(title, sub) {
+    const el = $id("sr-resultInner");
+    el.classList.remove("visible");
+    setTimeout(() => {
+      $id("sr-resultIcon").textContent = "🎉";
+      $id("sr-resultTitle").textContent = title;
+      $id("sr-resultSub").textContent = sub;
+      el.classList.add("win", "visible");
+    }, 60);
+  }
+
+  function openWinOverlay({ title, desc, code, hint, imageUrl }) {
+    const row = $id("sr-winPhotos");
+    row.innerHTML = "";
+    const src = imageUrl || "";
+    for (let i = 0; i < DRUM_COUNT; i++) {
+      if (!src) continue;
+      const img = document.createElement("img");
+      img.src = src; img.alt = "";
+      row.appendChild(img);
+    }
+    $id("sr-winOverlayTitle").textContent = title || "Поздравляем!";
+    $id("sr-winOverlayDesc").textContent = desc || "";
+    $id("sr-winOverlayHint").textContent = hint || "";
+    $id("sr-winOverlayCode").textContent = code || "";
+    lastRedeemCode = code;
+    lastRedeemHint = hint;
+    $id("sr-winOverlay").classList.add("active");
+    $id("sr-machineBody").classList.add("dimmed");
+  }
+
+  function closeWinOverlay() {
+    $id("sr-winOverlay").classList.remove("active");
+    $id("sr-machineBody").classList.remove("dimmed");
+  }
+
+  async function handleSpin() {
+    if (isSpinning) return;
+    if (!sessionState.authenticated) { showTgModal(); return; }
+    if (!sessionState.can_spin) {
+      setError(sessionState.already_spun ? "Вы уже использовали прокрут." : "Призы ещё не настроены. Зайдите позже.");
+      return;
+    }
+    isSpinning = true;
+    setError("");
+    $id("sr-spinBtn").disabled = true;
+    $id("sr-resultInner").classList.remove("visible");
+    resetDrums();
+    $id("sr-loadingOverlay").classList.add("active");
+
+    let result;
+    try {
+      const r = await apiFetch(SPIN_URL, { method: "POST", body: JSON.stringify({ action: "spin" }) });
+      const data = await r.json().catch(() => ({}));
+      if (r.status === 409) {
+        setError("Эта прокрутка уже была использована.");
+        if (data.redeem_code) updateRedeemBanner({ already_spun: true, redeem_code: data.redeem_code, redeem_hint: data.redeem_hint });
+        $id("sr-loadingOverlay").classList.remove("active");
+        isSpinning = false;
+        setSpinEnabled(false);
+        return;
+      }
+      if (!r.ok) throw new Error(data.error || `HTTP ${r.status}`);
+      result = data;
+      if (result.symbol_images) {
+        applySymbolsFromSession({ symbol_images: result.symbol_images, prizes: result.prizes || sessionState.prizesList || [] });
+        buildDrums();
+        resetDrums();
+      }
+    } catch (e) {
+      setError(e.message || "Ошибка сервера");
+      $id("sr-loadingOverlay").classList.remove("active");
+      isSpinning = false;
+      $id("sr-spinBtn").disabled = false;
+      return;
+    }
+
+    $id("sr-loadingOverlay").classList.remove("active");
+    const winId = result.symbols && result.symbols[0];
+    const syms = result.symbols || Array(DRUM_COUNT).fill(SYMBOLS[0]?.id || "gift");
+    await Promise.all(syms.map((id, i) => animateDrum(i, id, i * 140)));
+
+    for (let i = 0; i < DRUM_COUNT; i++) $id(`sr-drum-${i}`)?.classList.add("winner");
+    const fl = $id("sr-jackpotFlash");
+    fl.classList.add("active");
+    setTimeout(() => fl.classList.remove("active"), 1600);
+
+    showResult(result.prize || "ВЫ ВЫИГРАЛИ!", result.prize_description || "");
+    const imgMap = result.symbol_images || {};
+    lastWinImageUrl = winId ? imgMap[winId] || "" : "";
+    openWinOverlay({ title: result.prize, desc: result.prize_description, code: result.redeem_code, hint: result.redeem_hint, imageUrl: lastWinImageUrl });
+
+    sessionState.can_spin = false;
+    sessionState.already_spun = true;
+    updateRedeemBanner({ already_spun: true, redeem_code: result.redeem_code, redeem_hint: result.redeem_hint });
+    isSpinning = false;
+    setSpinEnabled(false);
+  }
+
+  async function init() {
+    buildDrums();
+    const hasToken = new URLSearchParams(location.search).has("token");
+    if (!hasToken) { showTgModal(); return; }
+    $id("sr-loadingOverlay").classList.add("active");
+    await tryAuthFromQuery();
+    const session = await fetchSession();
+    $id("sr-loadingOverlay").classList.remove("active");
+    if (!session || session.unauthorized) {
+      sessionState.authenticated = false;
+      setSpinEnabled(true);
+      applySymbolsFromSession({ symbol_images: {}, prizes: [] });
+      buildDrums();
+      showTgModal();
+      return;
+    }
+    sessionState = { authenticated: true, can_spin: session.can_spin, already_spun: session.already_spun, prizesList: session.prizes };
+    applySymbolsFromSession(session);
+    buildDrums();
+    updateRedeemBanner(session);
+    setSpinEnabled(session.can_spin && !session.already_spun);
+    if (!session.can_spin && !session.already_spun) setError("Нет активных призов. Обратитесь к администратору.");
+  }
+
+  $id("sr-copyCodeBtn").onclick = async () => {
+    if (!lastRedeemCode) return;
+    try { await navigator.clipboard.writeText(lastRedeemCode); } catch {}
+  };
+  $id("sr-winOverlayClose").onclick = closeWinOverlay;
+  $id("sr-tgConfirm").onclick = () => { window.location.href = TG_BOT_URL; };
+  $id("sr-spinBtn").onclick = handleSpin;
+
+  init();
+})();
+</script>

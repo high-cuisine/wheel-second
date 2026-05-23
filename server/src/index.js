@@ -220,7 +220,26 @@ const upload = multer({
   },
 });
 
+const ALLOWED_ORIGINS = new Set([
+  "https://sainep.pro",
+  "https://strip-nsk.ru",
+]);
+
 const app = express();
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin && ALLOWED_ORIGINS.has(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    res.setHeader("Vary", "Origin");
+  }
+  if (req.method === "OPTIONS") return res.sendStatus(204);
+  next();
+});
+
 app.use(cookieParser());
 app.use(express.json({ limit: "64kb" }));
 app.use("/uploads", express.static(UPLOAD_DIR, { fallthrough: true }));
@@ -272,7 +291,7 @@ app.post("/api/auth", (req, res) => {
 
     res.cookie(USER_COOKIE, sessionId, {
       httpOnly: true,
-      sameSite: "lax",
+      sameSite: COOKIE_SECURE ? "none" : "lax",
       secure: COOKIE_SECURE,
       maxAge: SESSION_MS,
       path: "/",
