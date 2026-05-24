@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Менеджер — проверка кодов</title>
+  <style>
+    :root {
+      --bg: #0f0a1a;
+      --card: #1a1230;
+      --border: rgba(107,33,168,0.45);
+      --text: #f3e8ff;
+      --muted: #a78bfa;
+      --accent: #e91e8c;
+      --gold: #ffd700;
+      --ok: #22c55e;
+      --warn: #f59e0b;
+      --err: #f87171;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .wrap { width: 100%; max-width: 480px; }
+    h1 { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+    .sub { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
+
+    section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    label { display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 5px; }
+    input {
+      width: 100%;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(107,33,168,0.4);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: var(--text);
+      font-size: 15px;
+      outline: none;
+      margin-bottom: 12px;
+    }
+    input:focus { border-color: var(--accent); }
+    input#codeInput {
+      font-size: 22px;
+      letter-spacing: 4px;
+      text-align: center;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity .2s;
+    }
+    button:disabled { opacity: .4; cursor: not-allowed; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover:not(:disabled) { opacity: .85; }
+    .btn-success { background: var(--ok); color: #000; }
+    .btn-success:hover:not(:disabled) { opacity: .85; }
+    .btn-outline { background: transparent; border: 1px solid var(--muted); color: var(--muted); margin-top: 8px; }
+
+    .result-card {
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 16px;
+      display: none;
+    }
+    .result-card.valid   { background: rgba(34,197,94,.1);  border: 1.5px solid rgba(34,197,94,.45); }
+    .result-card.redeemed{ background: rgba(245,158,11,.1); border: 1.5px solid rgba(245,158,11,.45); }
+    .result-card.expired { background: rgba(248,113,113,.1);border: 1.5px solid rgba(248,113,113,.45); }
+    .result-card.notfound{ background: rgba(248,113,113,.1);border: 1.5px solid rgba(248,113,113,.45); }
+
+    .status-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      margin-bottom: 12px;
+    }
+    .badge-valid    { background: rgba(34,197,94,.2);  color: var(--ok); }
+    .badge-redeemed { background: rgba(245,158,11,.2); color: var(--warn); }
+    .badge-expired  { background: rgba(248,113,113,.2);color: var(--err); }
+    .badge-notfound { background: rgba(248,113,113,.2);color: var(--err); }
+
+    .prize-name { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
+    .prize-sub  { color: var(--muted); font-size: 13px; margin-bottom: 12px; }
+    .meta-row   { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+    .meta-row span:last-child { color: var(--text); font-weight: 600; }
+
+    .expiry-highlight {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--gold);
+      margin: 8px 0;
+    }
+
+    .msg { font-size: 13px; color: var(--err); min-height: 18px; margin-top: 6px; text-align: center; }
+    .logout-btn { background: transparent; border: none; color: var(--muted); font-size: 12px; cursor: pointer; text-decoration: underline; margin-top: 8px; width: auto; padding: 0; }
+
+    #loginSection, #checkSection { transition: opacity .2s; }
+    #checkSection { display: none; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Менеджер</h1>
+  <p class="sub">Проверка и активация призовых кодов</p>
+
+  <!-- LOGIN -->
+  <section id="loginSection">
+    <label>Логин</label>
+    <input type="text" id="loginInput" autocomplete="username" placeholder="manager"/>
+    <label>Пароль</label>
+    <input type="password" id="passwordInput" autocomplete="current-password"/>
+    <button class="btn-primary" id="loginBtn">Войти</button>
+    <div class="msg" id="loginMsg"></div>
+  </section>
+
+  <!-- CHECK -->
+  <section id="checkSection">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <span style="font-weight:700;">Введите код</span>
+      <button class="logout-btn" id="logoutBtn">Выйти</button>
+    </div>
+    <label>Код (4 символа)</label>
+    <input type="text" id="codeInput" maxlength="4" placeholder="A3K9" autocomplete="off"/>
+    <button class="btn-primary" id="checkBtn">Проверить</button>
+    <div class="msg" id="checkMsg"></div>
+
+    <div class="result-card" id="resultCard">
+      <div class="status-badge" id="statusBadge"></div>
+      <div class="prize-name" id="prizeName"></div>
+      <div class="prize-sub" id="prizeSub"></div>
+      <div class="expiry-highlight" id="expiryStr"></div>
+      <div class="meta-row"><span>Код</span><span id="metaCode"></span></div>
+      <div class="meta-row" id="redeemedRow" style="display:none"><span>Погашен</span><span id="metaRedeemed"></span></div>
+      <button class="btn-success" id="redeemBtn" style="margin-top:14px;display:none;">Погасить — пустить в клуб</button>
+    </div>
+  </section>
+</div>
+
+<script>
+  const api = (path, opts) => fetch(path, {
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    ...opts,
+  }).then(r => r.json().then(d => ({ ok: r.ok, status: r.status, data: d })));
+
+  const $ = id => document.getElementById(id);
+
+  let currentCode = "";
+
+  // Check if already logged in
+  api("/api/manager/check", { method: "POST", body: JSON.stringify({ code: "" }) })
+    .then(r => {
+      if (r.status !== 401) showCheckSection();
+    }).catch(() => {});
+
+  $("loginBtn").onclick = async () => {
+    $("loginMsg").textContent = "";
+    const login = $("loginInput").value.trim();
+    const password = $("passwordInput").value;
+    if (!login || !password) { $("loginMsg").textContent = "Заполните поля"; return; }
+    $("loginBtn").disabled = true;
+    const r = await api("/api/manager/login", { method: "POST", body: JSON.stringify({ login, password }) });
+    $("loginBtn").disabled = false;
+    if (r.ok) {
+      showCheckSection();
+    } else {
+      $("loginMsg").textContent = r.data?.error === "invalid credentials" ? "Неверный логин или пароль" : "Ошибка входа";
+    }
+  };
+
+  $("logoutBtn").onclick = async () => {
+    await api("/api/manager/logout", { method: "POST", body: "{}" });
+    location.reload();
+  };
+
+  $("codeInput").oninput = () => {
+    $("codeInput").value = $("codeInput").value.toUpperCase().replace(/[^A-Z2-9]/g, "");
+  };
+
+  $("codeInput").onkeydown = e => { if (e.key === "Enter") $("checkBtn").click(); };
+
+  $("checkBtn").onclick = async () => {
+    const code = $("codeInput").value.trim();
+    $("checkMsg").textContent = "";
+    hideResult();
+    if (code.length < 4) { $("checkMsg").textContent = "Код — 4 символа"; return; }
+    $("checkBtn").disabled = true;
+    const r = await api("/api/manager/check", { method: "POST", body: JSON.stringify({ code }) });
+    $("checkBtn").disabled = false;
+    if (r.status === 404) { showResult("notfound", "Код не найден", "", "", code, null, null); return; }
+    if (!r.ok && r.status !== 200) { $("checkMsg").textContent = "Ошибка сервера"; return; }
+    const d = r.data;
+    currentCode = d.code;
+    showResult(d.status, d.prize_title, d.prize_subtitle, d.expires_at_str, d.code, d.redeemed_at, d.status === "valid");
+  };
+
+  $("redeemBtn").onclick = async () => {
+    if (!currentCode) return;
+    $("redeemBtn").disabled = true;
+    const r = await api("/api/manager/redeem", { method: "POST", body: JSON.stringify({ code: currentCode }) });
+    if (r.ok) {
+      showResult("redeemed", $("prizeName").textContent, $("prizeSub").textContent, $("expiryStr").textContent, currentCode, Date.now(), false);
+    } else {
+      $("checkMsg").textContent = r.data?.error === "expired" ? "Срок действия истёк" : (r.data?.error || "Ошибка");
+      $("redeemBtn").disabled = false;
+    }
+  };
+
+  function showResult(status, prizeName, prizeSub, expiryStr, code, redeemedAt, canRedeem) {
+    const card = $("resultCard");
+    card.className = `result-card ${status}`;
+    card.style.display = "block";
+
+    const labels = { valid: "Действителен", redeemed: "Погашен", expired: "Просрочен", notfound: "Не найден" };
+    const badgeClass = { valid: "badge-valid", redeemed: "badge-redeemed", expired: "badge-expired", notfound: "badge-notfound" };
+    $("statusBadge").textContent = labels[status] || status;
+    $("statusBadge").className = `status-badge ${badgeClass[status] || ""}`;
+
+    $("prizeName").textContent = prizeName || "";
+    $("prizeSub").textContent = prizeSub || "";
+    $("expiryStr").textContent = expiryStr ? `Действителен до ${expiryStr}` : "";
+    $("metaCode").textContent = code || "";
+
+    if (redeemedAt) {
+      $("redeemedRow").style.display = "flex";
+      $("metaRedeemed").textContent = new Date(redeemedAt).toLocaleString("ru");
+    } else {
+      $("redeemedRow").style.display = "none";
+    }
+
+    $("redeemBtn").style.display = canRedeem ? "block" : "none";
+    $("redeemBtn").disabled = false;
+  }
+
+  function hideResult() {
+    $("resultCard").style.display = "none";
+    currentCode = "";
+  }
+
+  function showCheckSection() {
+    $("loginSection").style.display = "none";
+    $("checkSection").style.display = "block";
+  }
+</script>
+</body>
+</html>

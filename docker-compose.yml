@@ -17,6 +17,9 @@ services:
       # true за HTTPS (обязательно для SameSite=None при кросс-доменных запросах)
       COOKIE_SECURE: ${COOKIE_SECURE:-true}
       PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-https://sainep.pro}
+      MANAGER_LOGIN: ${MANAGER_LOGIN:-manager}
+      MANAGER_PASSWORD: ${MANAGER_PASSWORD:-}
+      TZ_OFFSET_HOURS: ${TZ_OFFSET_HOURS:-7}
     volumes:
       - wheel_data:/app/data
       - wheel_uploads:/app/uploads

@@ -706,6 +706,7 @@
   <div class="win-code-wrap">
     <div class="win-hint" id="sr-winOverlayHint"></div>
     <code id="sr-winOverlayCode"></code>
+    <div id="sr-winOverlayExpiry" style="margin-top:8px;font-size:13px;color:#ffd700;font-weight:700;"></div>
     <div>
       <button type="button" class="copy-btn" id="sr-copyCodeBtn">Скопировать код</button>
     </div>
@@ -777,6 +778,7 @@
         <span>Вы уже крутили колесо.</span>
         <code id="sr-redeemBannerCode"></code>
         <span class="win-hint" id="sr-redeemBannerHint"></span>
+        <span id="sr-redeemBannerExpiry" style="color:#ffd700;font-size:12px;font-weight:700;"></span>
       </div>
       <div class="result-message">
         <div class="result-inner win" id="sr-resultInner">
@@ -946,6 +948,7 @@
       b.classList.add("visible");
       $id("sr-redeemBannerCode").textContent = data.redeem_code;
       $id("sr-redeemBannerHint").textContent = data.redeem_hint || "";
+      $id("sr-redeemBannerExpiry").textContent = data.expires_at_str ? "Действителен до " + data.expires_at_str : "";
     } else {
       b.classList.remove("visible");
     }
@@ -999,7 +1002,7 @@
     }, 60);
   }
 
-  function openWinOverlay({ title, desc, code, hint, imageUrl }) {
+  function openWinOverlay({ title, desc, code, hint, imageUrl, expiryStr }) {
     const row = $id("sr-winPhotos");
     row.innerHTML = "";
     const src = imageUrl || "";
@@ -1013,6 +1016,7 @@
     $id("sr-winOverlayDesc").textContent = desc || "";
     $id("sr-winOverlayHint").textContent = hint || "";
     $id("sr-winOverlayCode").textContent = code || "";
+    $id("sr-winOverlayExpiry").textContent = expiryStr ? "Действителен до " + expiryStr : "";
     lastRedeemCode = code;
     lastRedeemHint = hint;
     $id("sr-winOverlay").classList.add("active");
@@ -1078,7 +1082,7 @@
     showResult(result.prize || "ВЫ ВЫИГРАЛИ!", result.prize_description || "");
     const imgMap = result.symbol_images || {};
     lastWinImageUrl = winId ? imgMap[winId] || "" : "";
-    openWinOverlay({ title: result.prize, desc: result.prize_description, code: result.redeem_code, hint: result.redeem_hint, imageUrl: lastWinImageUrl });
+    openWinOverlay({ title: result.prize, desc: result.prize_description, code: result.redeem_code, hint: result.redeem_hint, imageUrl: lastWinImageUrl, expiryStr: result.expires_at_str });
 
     sessionState.can_spin = false;
     sessionState.already_spun = true;

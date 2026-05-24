@@ -41,13 +41,21 @@ const REDEEM_HINT =
 /** Base URL for absolute image links (e.g. https://sainep.pro). Empty = relative paths. */
 const PUBLIC_BASE_URL = (process.env.PUBLIC_BASE_URL || "").replace(/\/$/, "");
 
+const MANAGER_LOGIN = process.env.MANAGER_LOGIN || "manager";
+const MANAGER_PASSWORD = process.env.MANAGER_PASSWORD || "";
+
+/** UTC offset in hours for expiry calendar math (default 7 = Novosibirsk). */
+const TZ_OFFSET_MS = (Number(process.env.TZ_OFFSET_HOURS) || 7) * 3600000;
+
 /** Set COOKIE_SECURE=true behind HTTPS (reverse proxy). */
 const COOKIE_SECURE = process.env.COOKIE_SECURE === "true";
 
 const USER_COOKIE = "wheel_session";
 const ADMIN_COOKIE = "wheel_admin";
+const MANAGER_COOKIE = "wheel_manager";
 const SESSION_MS = 7 * 24 * 60 * 60 * 1000;
 const ADMIN_SESSION_MS = 24 * 60 * 60 * 1000;
+const MANAGER_SESSION_MS = 24 * 60 * 60 * 1000;
 
 const DRUM_COUNT = 5;
 
@@ -59,24 +67,34 @@ function nowMs() {
   return Date.now();
 }
 
-function randomCodePart(len = 4) {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let s = "";
-  for (let i = 0; i < len; i++) {
-    s += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return s;
-}
+const CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const MONTHS_RU = ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
 
 function generateUniqueCode(db) {
-  for (let i = 0; i < 50; i++) {
-    const code = `NSK-${randomCodePart()}-${randomCodePart()}`;
-    const row = db
-      .prepare("SELECT 1 FROM redeem_codes WHERE code = ?")
-      .get(code);
+  for (let i = 0; i < 200; i++) {
+    let code = "";
+    for (let j = 0; j < 4; j++) code += CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)];
+    const row = db.prepare("SELECT 1 FROM redeem_codes WHERE code = ?").get(code);
     if (!row) return code;
   }
   throw new Error("could not generate unique code");
+}
+
+/** Expiry: calendar day of win + 3 days, at 23:59:59 local time. */
+function calcExpiry(createdAtMs) {
+  const localMs = createdAtMs + TZ_OFFSET_MS;
+  const d = new Date(localMs);
+  const y = d.getUTCFullYear();
+  const m = d.getUTCMonth();
+  const day = d.getUTCDate();
+  return Date.UTC(y, m, day + 3, 23, 59, 59, 0) - TZ_OFFSET_MS;
+}
+
+function formatExpiry(expiresAtMs) {
+  if (!expiresAtMs) return "";
+  const localMs = expiresAtMs + TZ_OFFSET_MS;
+  const d = new Date(localMs);
+  return `${d.getUTCDate()} ${MONTHS_RU[d.getUTCMonth()]} 23:59`;
 }
 
 function initDb(db) {
@@ -129,15 +147,32 @@ function initDb(db) {
       FOREIGN KEY (redeem_code) REFERENCES redeem_codes(code)
     );
 
+    CREATE TABLE IF NOT EXISTS manager_sessions (
+      id TEXT PRIMARY KEY,
+      expires_at INTEGER NOT NULL
+    );
+
     CREATE INDEX IF NOT EXISTS idx_sessions_exp ON sessions(expires_at);
     CREATE INDEX IF NOT EXISTS idx_admin_sessions_exp ON admin_sessions(expires_at);
+    CREATE INDEX IF NOT EXISTS idx_manager_sessions_exp ON manager_sessions(expires_at);
   `);
+
+  // Migration: add expires_at to redeem_codes if not present
+  try { db.exec(`ALTER TABLE redeem_codes ADD COLUMN expires_at INTEGER`); } catch {}
 }
 
 function cleanupSessions(db) {
   const t = nowMs();
   db.prepare("DELETE FROM sessions WHERE expires_at < ?").run(t);
   db.prepare("DELETE FROM admin_sessions WHERE expires_at < ?").run(t);
+  db.prepare("DELETE FROM manager_sessions WHERE expires_at < ?").run(t);
+}
+
+function requireManagerSession(db, req) {
+  const sid = req.cookies[MANAGER_COOKIE];
+  if (!sid) return false;
+  const row = db.prepare(`SELECT 1 FROM manager_sessions WHERE id = ? AND expires_at > ?`).get(sid, nowMs());
+  return !!row;
 }
 
 function getActivePrizes(db) {
@@ -256,6 +291,10 @@ function buildSessionPayload(userSub) {
     )
     .get(userSub);
   const already_spun = !!spin;
+  const expiresAt = spin
+    ? (db.prepare(`SELECT expires_at FROM redeem_codes WHERE code = ?`).get(spin.redeem_code)?.expires_at ?? null)
+    : null;
+
   return {
     authenticated: true,
     can_spin: !already_spun && prizes.length > 0,
@@ -263,6 +302,8 @@ function buildSessionPayload(userSub) {
     symbol_images,
     redeem_code: spin ? spin.redeem_code : null,
     redeem_hint: REDEEM_HINT,
+    expires_at: expiresAt,
+    expires_at_str: formatExpiry(expiresAt),
     prizes: prizes.map((p) => ({
       id: prizeKey(p.id),
       title: p.title,
@@ -352,11 +393,13 @@ function spinHandler(req, res) {
     const symbols = Array(DRUM_COUNT).fill(pk);
     const symbol_images = symbolImagesFromPrizes(prizes);
 
+    const expiresAt = calcExpiry(t);
+
     const tx = db.transaction(() => {
       db.prepare(
-        `INSERT INTO redeem_codes (code, user_sub, prize_id, created_at, redeemed_at, redeemed_by)
-         VALUES (?, ?, ?, ?, NULL, NULL)`,
-      ).run(code, userSub, pick.id, t);
+        `INSERT INTO redeem_codes (code, user_sub, prize_id, created_at, expires_at, redeemed_at, redeemed_by)
+         VALUES (?, ?, ?, ?, ?, NULL, NULL)`,
+      ).run(code, userSub, pick.id, t, expiresAt);
       db.prepare(
         `INSERT INTO spins (user_sub, prize_id, redeem_code, created_at)
          VALUES (?, ?, ?, ?)`,
@@ -372,6 +415,8 @@ function spinHandler(req, res) {
       symbol_images,
       redeem_code: code,
       redeem_hint: REDEEM_HINT,
+      expires_at: expiresAt,
+      expires_at_str: formatExpiry(expiresAt),
       prizes: prizes.map((p) => ({
         id: prizeKey(p.id),
         title: p.title,
@@ -538,7 +583,8 @@ app.post("/api/admin/codes/redeem", adminOnly, (req, res) => {
   }
   const row = db
     .prepare(
-      `SELECT c.code, c.user_sub, c.prize_id, c.redeemed_at, p.title AS prize_title, p.subtitle AS prize_subtitle
+      `SELECT c.code, c.user_sub, c.prize_id, c.created_at, c.expires_at, c.redeemed_at,
+              p.title AS prize_title, p.subtitle AS prize_subtitle
        FROM redeem_codes c
        JOIN prizes p ON p.id = c.prize_id
        WHERE c.code = ?`,
@@ -554,6 +600,13 @@ app.post("/api/admin/codes/redeem", adminOnly, (req, res) => {
       redeemed_at: row.redeemed_at,
     });
   }
+  if (row.expires_at != null && row.expires_at < nowMs()) {
+    return res.status(410).json({
+      error: "expired",
+      expires_at: row.expires_at,
+      expires_at_str: formatExpiry(row.expires_at),
+    });
+  }
 
   const t = nowMs();
   const by = "admin";
@@ -567,8 +620,104 @@ app.post("/api/admin/codes/redeem", adminOnly, (req, res) => {
     user_sub: row.user_sub,
     prize_title: row.prize_title,
     prize_subtitle: row.prize_subtitle,
+    expires_at: row.expires_at,
+    expires_at_str: formatExpiry(row.expires_at),
   });
 });
+
+/* ── MANAGER ── */
+
+function managerOnly(req, res, next) {
+  if (!requireManagerSession(db, req)) {
+    return res.status(401).json({ error: "manager required" });
+  }
+  next();
+}
+
+app.post("/api/manager/login", (req, res) => {
+  if (!MANAGER_PASSWORD) {
+    return res.status(500).json({ error: "MANAGER_PASSWORD not set" });
+  }
+  const { login, password } = req.body || {};
+  if (login !== MANAGER_LOGIN || password !== MANAGER_PASSWORD) {
+    return res.status(401).json({ error: "invalid credentials" });
+  }
+  const t = nowMs();
+  const sid = uuidv4().replace(/-/g, "") + uuidv4().replace(/-/g, "");
+  db.prepare(`INSERT INTO manager_sessions (id, expires_at) VALUES (?, ?)`).run(sid, t + MANAGER_SESSION_MS);
+  res.cookie(MANAGER_COOKIE, sid, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: COOKIE_SECURE,
+    maxAge: MANAGER_SESSION_MS,
+    path: "/",
+  });
+  return res.json({ ok: true });
+});
+
+app.post("/api/manager/logout", (req, res) => {
+  const sid = req.cookies[MANAGER_COOKIE];
+  if (sid) db.prepare(`DELETE FROM manager_sessions WHERE id = ?`).run(sid);
+  res.clearCookie(MANAGER_COOKIE, { path: "/" });
+  return res.json({ ok: true });
+});
+
+app.post("/api/manager/check", managerOnly, (req, res) => {
+  const code = String(req.body?.code || "").trim().toUpperCase();
+  if (!code) return res.status(400).json({ error: "code required" });
+
+  const row = db.prepare(
+    `SELECT c.code, c.user_sub, c.created_at, c.expires_at, c.redeemed_at, c.redeemed_by,
+            p.title AS prize_title, p.subtitle AS prize_subtitle
+     FROM redeem_codes c
+     JOIN prizes p ON p.id = c.prize_id
+     WHERE c.code = ?`,
+  ).get(code);
+
+  if (!row) return res.status(404).json({ error: "not_found" });
+
+  const now = nowMs();
+  let status;
+  if (row.redeemed_at != null) status = "redeemed";
+  else if (row.expires_at != null && row.expires_at < now) status = "expired";
+  else status = "valid";
+
+  return res.json({
+    code: row.code,
+    prize_title: row.prize_title,
+    prize_subtitle: row.prize_subtitle,
+    created_at: row.created_at,
+    expires_at: row.expires_at,
+    expires_at_str: formatExpiry(row.expires_at),
+    redeemed_at: row.redeemed_at,
+    redeemed_by: row.redeemed_by,
+    status,
+  });
+});
+
+app.post("/api/manager/redeem", managerOnly, (req, res) => {
+  const code = String(req.body?.code || "").trim().toUpperCase();
+  if (!code) return res.status(400).json({ error: "code required" });
+
+  const row = db.prepare(
+    `SELECT c.code, c.user_sub, c.expires_at, c.redeemed_at, p.title AS prize_title
+     FROM redeem_codes c
+     JOIN prizes p ON p.id = c.prize_id
+     WHERE c.code = ?`,
+  ).get(code);
+
+  if (!row) return res.status(404).json({ error: "not_found" });
+  if (row.redeemed_at != null) return res.status(409).json({ error: "already_activated", redeemed_at: row.redeemed_at });
+  if (row.expires_at != null && row.expires_at < nowMs()) {
+    return res.status(410).json({ error: "expired", expires_at_str: formatExpiry(row.expires_at) });
+  }
+
+  const t = nowMs();
+  db.prepare(`UPDATE redeem_codes SET redeemed_at = ?, redeemed_by = ? WHERE code = ?`).run(t, "manager", code);
+  return res.json({ ok: true, prize_title: row.prize_title });
+});
+
+/* ── STATIC ── */
 
 app.get("/", (_req, res) => {
   res.sendFile(path.join(STATIC_DIR, "index.html"));
@@ -576,6 +725,10 @@ app.get("/", (_req, res) => {
 
 app.get("/admin.html", (_req, res) => {
   res.sendFile(path.join(STATIC_DIR, "admin.html"));
+});
+
+app.get("/manager.html", (_req, res) => {
+  res.sendFile(path.join(STATIC_DIR, "manager.html"));
 });
 
 app.listen(PORT, "0.0.0.0", () => {
@@ -588,5 +741,8 @@ app.listen(PORT, "0.0.0.0", () => {
   }
   if (!process.env.ADMIN_LOGIN) {
     console.warn(`Warning: ADMIN_LOGIN not set, defaulting to "${ADMIN_LOGIN}".`);
+  }
+  if (!MANAGER_PASSWORD) {
+    console.warn("Warning: MANAGER_PASSWORD is empty — manager login disabled.");
   }
 });
