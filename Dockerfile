@@ -21,7 +21,7 @@ COPY server/package.json ./
 COPY server/src ./src
 
 WORKDIR /app
-COPY index.html admin.html ./
+COPY index.html admin.html manager.html ./
 
 WORKDIR /app/server
 
