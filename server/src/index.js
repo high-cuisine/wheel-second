@@ -2,7 +2,7 @@
  * Wheel API (Node.js + Express + SQLite).
  *
  * Bot contract: return user to https://<your-host>/?token=<jwt>
- * JWT: algorithm HS256, secret from JWT_SECRET.
+ * JWT: algorithm HS256 or HS512, secret from JWT_SECRET.
  * Required claims: sub (string, e.g. Telegram user id), exp.
  * Optional: iss (JWT_ISSUER), aud (JWT_AUDIENCE).
  */
@@ -197,7 +197,7 @@ function verifyJwt(token) {
     throw new Error("JWT_SECRET is not set");
   }
   const payload = jwt.verify(token, JWT_SECRET, {
-    algorithms: ["HS256"],
+    algorithms: ["HS256", "HS512"],
     issuer: JWT_ISSUER,
     audience: JWT_AUDIENCE,
   });
